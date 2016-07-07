@@ -1,0 +1,102 @@
+﻿all data are transfering in messages
+all types in little endian bytes order
+
+[1]char - 1 byte signed
+[2]short - 2 bytes signed
+[3]int - 4 bytes signed
+[4]float - 4 bytes
+[5]double - 8 bytes
+[6]string - 2 bytes id size, then size bytes is string body (plase don't use strings more then 65000 chars) 
+//!long long - not used, please use double for transfering very big numbers
+type[n] - seqaense of n elements == type,type,type,...
+
+
+standart packet structure
+{
+	short //size of message, then will be size bytes - message data, please don't use message more than 65000 bytes long
+	char //message type
+	//message body
+	char n //number of elements
+	char[n] //n types of elements
+	...
+}
+
+proxy packet structure
+{
+	short //size of message
+	//standart packet
+	char //id
+	...
+	//service data
+	int //user id, for message from 0 == broadcast
+}
+
+text messages
+{
+	short //size
+	char //101
+	char //4
+	char[4] //[3,2,1,6]
+	int //chat id
+	short //item id
+	char //packet type, start/continue/end - (&3== 1/2/3)
+	string //message data
+}
+
+message type
+to server
+0-initial auth, igrored in other times
+1-auth
+to client
+1-OK answer
+2-auth token
+3-user info
+
+
+//authorization in packets packet size not showen
+
+to server ->{
+	char //0
+	char //1
+	char //6
+	string //client token
+}
+
+to client <-{ //success message
+	char //1
+	char //1
+	char //1
+	char //1
+}
+
+->{//auth1
+	char //1
+	char //2
+	char //1
+	char //6
+	char //1
+	string //login
+}
+
+<-{
+	char //2 auth process
+	char //1
+	char //6
+	string //token
+}
+
+->{//auth2
+	char //1
+	char //2
+	char //1
+	char //6
+	char //2
+	string //hashed password
+}
+
+<-{//on success
+	char //3-user info
+	char n //number of fields
+	char[n] //field types, in strict order
+}
+//auth successed
