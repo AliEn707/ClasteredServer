@@ -105,15 +105,17 @@ static void loop(void* _w){
 						break;
 					}
 				}
-			}else if (strstr(buf,"<p")!=0 ){
+			}else if (strstr(buf,"<po")!=0 ){
 				//Flash policy 
 				socketSend(sock,PRIVATE_POLICY,sizeof(PRIVATE_POLICY));
 				socketClear(sock);
+				break;//already clear socket
 			}else if (strstr(buf,"GET")!=0){//TODO: add web socket
 				//Javaapplet policy
 				socketSend(sock,PRIVATE_POLICY_HTTP_HEADER,sizeof(PRIVATE_POLICY_HTTP_HEADER)-1);
 				socketSend(sock,PRIVATE_POLICY,sizeof(PRIVATE_POLICY)-1);
 				socketClear(sock);
+				break;//already clear socket
 			}else if (strstr(buf,"POS")!=0){ //Http-Rest, used only post requests
 					//TODO: add chose different worker
 			}

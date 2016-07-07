@@ -8,6 +8,12 @@ struct {
 	log_config log;
 	storage_config storage;
 	short run;
+	struct{
+		short total;
+		short tps;
+	}	serverworkers, 
+		socketworkers,
+		listenworkers;
 } config;
 
 #endif

@@ -9,4 +9,6 @@ void listenersClear();
 
 listener* listenersAdd(listener* l);
 
+void listenersForEach(void*(f)(listener *l, void *arg));
+
 #endif

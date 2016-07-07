@@ -44,8 +44,33 @@ static int readConfig(){
 		return 1;
 	}
 	while(feof(f)==0){
-		char buf[100];
+		char buf[200];
 		fscanf(f, "%s", buf);
+		if (buf[0]=='#'){
+			size_t s;
+			getline((char**)&buf,&s,f);
+		}else if (strcmp(buf, "port")==0){
+			short port;
+			fscanf(f, "%hd", &port);
+			listener* l=listenerStart(port);
+			if (l)
+				listenersAdd(l);
+		}else
+		if (strcmp(buf, "sw_total")==0){
+			fscanf(f, "%hd", &config.serverworkers.total);
+		}else
+		if (strcmp(buf, "sw_tps")==0){
+			fscanf(f, "%hd", &config.serverworkers.tps);
+		}else
+		if (strcmp(buf, "cw_total")==0){
+			fscanf(f, "%hd", &config.socketworkers.total);
+		}else
+		if (strcmp(buf, "cw_tps")==0){
+			fscanf(f, "%hd", &config.socketworkers.tps);
+		}else
+		if (strcmp(buf, "lw_total")==0){
+			fscanf(f, "%hd", &config.listenworkers.total);
+		}else
 		if (strcmp(buf, "storage_config")==0){
 			fscanf(f, "%s", config.storage.file);
 		}else
@@ -65,7 +90,15 @@ static void default_sigaction(int signal, siginfo_t *si, void *arg){
 	main_loop=0;
 }
 
+static void* proceedListener(listener *l, void *arg){
+	listenworkersAddWorkAll(l);
+	return 0;
+}
+
 //	FILE *f = fmemopen(&w, sizeof(w), "r+");
+
+#define startWorkers(type)\
+	type##workersCreate(config.type##workers.total,config.type##workers.tps)
 
 int main(int argc,char* argv[]){
 	int TPS=10;  //ticks per sec
@@ -83,6 +116,9 @@ int main(int argc,char* argv[]){
 	srand(time(0));
 	
 	memset(&config,0,sizeof(config));
+	config.serverworkers.tps=1;
+	config.socketworkers.tps=1;
+	
 	readConfig();
 	storageInit();
 	
@@ -91,22 +127,17 @@ int main(int argc,char* argv[]){
 	listenersInit();
 	clientMessageProcessorInit();
 	serverMessageProcessorInit();
-
-	listenworkersCreate(1, 0);
-	socketworkersCreate(1, 4);
-	serverworkersCreate(2, 10);
+	
+	startWorkers(listen);
+	startWorkers(socket);
+	startWorkers(server);
 	
 	listenworkersStartAll();
 	socketworkersStartAll();
 	serverworkersStartAll();
 	
 	//test
-	listener* l=listenerStart(8000);
-	if (!l)
-		return 1;
-	listenersAdd(l);
-	printf("%d\n",l);
-	listenworkersAddWorkAll(l);
+	listenersForEach(proceedListener);
 //	listenworkersAddWorkAll(listenersAdd(listenerStart(8000)));
 	//do some work
 	main_loop=1;

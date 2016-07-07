@@ -29,3 +29,6 @@ listener* listenersAdd(listener* l){
 	return l;
 }
 
+void listenersForEach(void*(f)(listener* l, void* arg)){
+	worklistForEachRemove(&listeners,(void*(*)(void*,void*))f,0);
+}
