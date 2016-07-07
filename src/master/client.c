@@ -142,25 +142,19 @@ static void* clientAddEach(bintree_key k,void *v,void *arg){
 		worklistAdd(&c->messages, m);
 	t_semSet(c->sem,0,1);
 	t_semSet(m->sem, 0,-1);
-		m->num+=1;
+		m->num++;
 	t_semSet(m->sem, 0,1);
 	return 0;
 }
 
-void clientMessageAdd(int id, client_message *m){
+void clientMessageAdd(client* c, client_message *m){
 	if (m){
-		if (id){
+		if (c){
 			m->num=1;
 			m->ready=1;
-			client* c;
-			if ((c=clientsGet(id))==0){
-				perror("clientGet");
-				clientMessageClear(m);
-			}else{
-				t_semSet(c->sem,0,-1);
-					worklistAdd(&c->messages, m);
-				t_semSet(c->sem,0,1);
-			}
+			t_semSet(c->sem,0,-1);
+				worklistAdd(&c->messages, m);
+			t_semSet(c->sem,0,1);
 			//find client and add
 		}else{
 			//add to all, and then

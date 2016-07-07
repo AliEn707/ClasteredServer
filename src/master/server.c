@@ -138,7 +138,10 @@ void serverPacketProceed(server *s, packet *p){
 		//remove client data from the end
 		short size=packetGetSize(p);
 		int client_id=*((int*)(buf+(size-=sizeof(client_id))));//check for write size size
-		clientMessageAdd(client_id, clientMessageNew(buf, size));
+		client* c=0;
+		if (client_id==0 || (c=clientsGet(client_id))!=0){
+			clientMessageAdd(c, clientMessageNew(buf, size));
+		}
 	}else{//proceed by self
 		processor(s, p);
 	}

@@ -43,12 +43,16 @@ static int readConfig(){
 		config.log.debug=1;
 		return 1;
 	}
+	char buf[700];
 	while(feof(f)==0){
-		char buf[200];
 		fscanf(f, "%s", buf);
 		if (buf[0]=='#'){
-			size_t s;
-			getline((char**)&buf,&s,f);
+			size_t $str=400;
+			char *str=malloc($str);
+			if (str){
+				getline(&str,&$str,f);
+				free(str);
+			}
 		}else if (strcmp(buf, "port")==0){
 			short port;
 			fscanf(f, "%hd", &port);

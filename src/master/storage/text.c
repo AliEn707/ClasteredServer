@@ -58,7 +58,7 @@ int storageClear(){
 int storageSlaves(int(*$)(slave_info*,void*arg),void*arg){
 	FILE *f=fopen(files.slaves,"rt");
 	slave_info s;
-	int i;
+	int i=0;
 	if (f){
 		while(feof(f)==0){
 			i++;

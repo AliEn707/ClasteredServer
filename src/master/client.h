@@ -44,7 +44,7 @@ void clientsCheck();
 void clientPacketProceed(client *c, packet* p);
 
 //work with client message queue
-void clientMessageAdd(int id, client_message *m);
+void clientMessageAdd(client *c, client_message *m);
 client_message* clientMessageNew(void* buf, short size);
 void clientMessageClear(client_message* m);
 
