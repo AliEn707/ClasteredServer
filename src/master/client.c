@@ -2,6 +2,7 @@
 
 #include "client.h"
 #include "server.h"
+#include "storage.h"
 #include "messageprocessor.h"
 #include "../share/containers/worklist.h"
 #include "../share/containers/bintree.h"
@@ -115,7 +116,7 @@ void clientsRemove(client* c){
 	t_semSet(sem,0,1);
 }
 
-void clientPacketProceed(client *c, packet *p){
+int clientPacketProceed(client *c, packet *p){
 	char* buf;
 	buf=packetGetData(p);
 	client_processor processor;
@@ -129,10 +130,12 @@ void clientPacketProceed(client *c, packet *p){
 			packetSend(p, s->sock);
 		}else{
 			printf("client %d server %d error\n", c->id, c->server_id);
+			return 1;
 		}
 	}else{//proceed by self
 		processor(c, p);
 	}
+	return 0;
 }
 
 static void* clientAddEach(bintree_key k,void *v,void *arg){
@@ -200,3 +203,9 @@ void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c)){
 	t_semSet(c->sem,0,1);
 }
 
+int clientSetInfo(client *c, user_info *u){
+	c->id=u->id;
+	sprintf(c->name,"%s",u->name);
+	//add other
+	return 0;
+}

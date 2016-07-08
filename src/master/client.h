@@ -3,6 +3,7 @@
 
 #include <sys/time.h>
 
+#include "storage.h"
 #include "../share/containers/worklist.h"
 #include "../share/system/t_sem.h"
 #include "../share/network/socket.h"
@@ -17,6 +18,8 @@ struct {
 	t_sem_t sem;
 	worklist messages;
 	time_t timestamp;
+	char name[30];
+	char token[30];
 } client;
 
 typedef 
@@ -41,7 +44,7 @@ void clientsRemove(client* c);
 void clientsCheck();
 
 //processor for packet from client
-void clientPacketProceed(client *c, packet* p);
+int clientPacketProceed(client *c, packet* p);
 
 //work with client message queue
 void clientMessageAdd(client *c, client_message *m);
@@ -51,4 +54,5 @@ void clientMessageClear(client_message* m);
 //processor for client message queue
 void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c));
 
+int clientSetInfo(client *c, user_info *u);
 #endif

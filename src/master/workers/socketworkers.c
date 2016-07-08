@@ -56,15 +56,18 @@ static void* proceed(void *data, void *_w){
 	int i;
 	for(i=0;i<10;i++)
 		if (socketRecvCheck(c->sock)!=0){
-			if (packetReceive(&wd->packet, c->sock)>0){
-				clientPacketProceed(c, &wd->packet);
-			}else{
+			do{
+				if (packetReceive(&wd->packet, c->sock)>0){
+					if (clientPacketProceed(c, &wd->packet)==0)
+						break;
+				}
 				w->$works--;
 				c->broken=1;
 				c->timestamp=time(0);
 				return _w;
-			}
-		}
+			}while(0);
+		}else
+			break;
 	return 0;
 }
 
