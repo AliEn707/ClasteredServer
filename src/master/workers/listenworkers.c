@@ -67,7 +67,6 @@ static void loop(void* _w){
 	//packetInit(&wd->packet);
 	//printf("1\t%d\n", w->sem->val);
 	//add some actions for every iteration
-	
 	t_semSet(sem,0,-1);
 		if(select(wd->maxfd+1, &wd->set, 0, 0, &t)>0){
 			sock=worklistForEachReturn(&w->works,check,_w);

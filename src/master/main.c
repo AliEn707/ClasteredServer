@@ -57,8 +57,10 @@ static int readConfig(){
 			short port;
 			fscanf(f, "%hd", &port);
 			listener* l=listenerStart(port);
-			if (l)
+			if (l){
 				listenersAdd(l);
+				printf("Listener %d added\n",l->sockfd);
+			}
 		}else
 		if (strcmp(buf, "sw_total")==0){
 			fscanf(f, "%hd", &config.serverworkers.total);
@@ -95,6 +97,7 @@ static void default_sigaction(int signal, siginfo_t *si, void *arg){
 }
 
 static void* proceedListener(listener *l, void *arg){
+	printf("added listener %d to listen workers\n", l->sockfd);
 	listenworkersAddWorkAll(l);
 	return 0;
 }
@@ -122,13 +125,14 @@ int main(int argc,char* argv[]){
 	memset(&config,0,sizeof(config));
 	config.serverworkers.tps=1;
 	config.socketworkers.tps=1;
+
+	listenersInit();
+	clientsInit();
+	serversInit();
 	
 	readConfig();
 	storageInit();
-	
-	clientsInit();
-	serversInit();
-	listenersInit();
+
 	clientMessageProcessorInit();
 	serverMessageProcessorInit();
 	
@@ -145,6 +149,7 @@ int main(int argc,char* argv[]){
 //	listenworkersAddWorkAll(listenersAdd(listenerStart(8000)));
 	//do some work
 	main_loop=1;
+	printf("Start main loop\n");
 	do{
 		timePassed(&tv); //start timer
 		//////test
@@ -155,9 +160,11 @@ int main(int argc,char* argv[]){
 		syncTPS(timePassed(&tv),TPS);
 	}while(main_loop);
 	//clearing
-	listenworkersClose();
+	sleep(1);
+	//deadlock here??
 	socketworkersStopAll();
 	serverworkersStopAll();
+	listenworkersClose();
 	sleep(1);
 	messageprocessorClear();
 	listenersClear();

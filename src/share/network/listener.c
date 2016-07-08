@@ -52,6 +52,7 @@ listener* listenerNew(int sock){
 		close(sock);
 		return 0;
 	}
+	memset(l,0,sizeof(*l));
 	l->sockfd=sock;
 	printf("listener fd=%d created\n", l->sockfd);
 	return l;

@@ -91,7 +91,7 @@ void workerbaseStop(worker * w){
 	t_semSet(w->sem,0,-1);
 		w->run=0;
 	t_semSet(w->sem,0,1);
-	pthread_join(w->pid, 0);
+	//pthread_join(w->pid, 0);
 }
 
 void workerbasePause(worker * w){
