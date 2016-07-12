@@ -34,10 +34,12 @@ $(TEST): $(SHARE_OBJECTS) $(TEST_OBJECTS)
 %.o: %.c
 	$(GCC) -c $(CFLAGS) $(DEFINES) $< -o $@
 	
+generator: 
+	$(GCC) $(SRC)/other/password_generator.c $(SRC)/share/md5.c $(SRC)/share/base64.c -o generator
 fast: $(PUBLIC)_fast
 	
 $(PUBLIC)_fast:
 	$(GCC) $(LDFLAGS) $(CFLAGS) $(SHARE_SOURCES) $(PUBLIC_SOURCES) -o $(PUBLIC)
 
 clean:
-	rm -rf $(SHARE_OBJECTS) $(PUBLIC_OBJECTS) $(TEST_OBJECTS) $(PUBLIC) $(TEST) $(PUBLIC).exe $(TEST).exe
+	rm -rf $(SHARE_OBJECTS) $(PUBLIC_OBJECTS) $(TEST_OBJECTS) $(PUBLIC) $(TEST) $(PUBLIC).exe $(TEST).exe generator.exe generator
