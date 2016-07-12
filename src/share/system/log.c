@@ -25,8 +25,10 @@ void printLog(const char* format, ...) {
 		vsprintf(str, format, argptr);
 	va_end(argptr);	
 	
-	if (config->debug)
+	if (config->debug){
 		fprintf(stdout, "%s: %s", tstr, str);
+		fflush(stdout);
+	}
 	if (config->file[0]!=0){
 		FILE *f=fopen(config->file, "a");
 		if (f){

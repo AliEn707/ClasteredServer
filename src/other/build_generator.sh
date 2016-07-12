@@ -1,0 +1,1 @@
+gcc password_generator.c ../share/md5.c ../share/base64.c -o generator

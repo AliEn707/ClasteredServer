@@ -12,6 +12,7 @@ typedef
 struct {
 	int id;
 	char name[40];
+	char passwd[50];
 } user_info;
 
 typedef

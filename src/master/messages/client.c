@@ -27,7 +27,7 @@
 #define clientCheckAuth(c)\
 	if(c->id==0){\
 		c->broken=1;\
-		printf("unauthorized client");\
+		printf("unauthorized client\n");\
 		return c;\
 	}\
 
@@ -38,13 +38,18 @@ static void *message1(client*cl, packet* p){
 	int i, size;
 	short s;
 	char buf[100];
+	printf("client auth\n");
 	if (f){	
 		size=fread(&c,sizeof(c),1,f);//
+		printf("%d\n",c);
 		size=fread(&c,sizeof(c),1,f);
+		printf("%d\n",c);
 		for(i=c;i>0;i--){
 			size=fread(&c,sizeof(c),1,f);
+			printf("%d\n",c);
 		}
 		size=fread(&c,sizeof(c),1,f);
+		printf("%d\n",c);
 		do{
 			if (c==1){
 				user_info u;
@@ -53,18 +58,21 @@ static void *message1(client*cl, packet* p){
 				buf[s]=0;
 				//find client by name
 				if(storageUserByName(buf, &u)==0){//if we found user
-					clientSetInfo(cl,&u);
+					struct {
+						int p1;
+						long p2;
+					} tokenbase={rand(),time(0)};
+					char token[100];
+					clientSetInfo(cl, &u);
 					clientsAdd(cl);
-					char md5[20];
-					MD5_Create((void*)&s,sizeof(s),md5);
-					base64_encode((void*)md5, (void*)cl->token,16, 0);
+					MD5_Create((void*)&tokenbase, sizeof(tokenbase), cl->token); //add normal token
+					s=base64_encode((void*)cl->token, (void*)token,16, 0);
 					size=0;
 					buf[0]=2;size++;
 					buf[1]=1;size++;
 					buf[2]=6;size++;
-					s=2;//real sizeof token
 					memcpy(buf+size,&s,sizeof(s));size+=sizeof(s);
-					memcpy(buf+size,cl->token,s);size+=s;
+					memcpy(buf+size,token,s);size+=s;
 					clientMessageAdd(cl, clientMessageNew(buf, size));
 					break;
 				}
@@ -72,9 +80,19 @@ static void *message1(client*cl, packet* p){
 				size=fread(&s,sizeof(s),1,f);//size
 				size=fread(buf,s,1,f);//hash
 				buf[s]=0;
-				if (strcmp(buf,cl->token)==0)//add normal token check
+				char token[100];
+				char md5[20];
+				memcpy(token, cl->token, 16);
+				memcpy(token+16, cl->passwd, 16);
+				MD5_Create((void*)token, 32, md5); 
+				s=base64_encode((void*)md5, (void*)token, 16, 0);
+				printf("token must be %s got %s\n", token, buf);
+				if (strcmp(buf,token)==0){//add normal token check
 					//auth ok
+					printf("token OK\n");
 					break;
+				}
+				printf("token Error\n");
 			}
 			/////
 //			c->id=rand();//for tests

@@ -59,7 +59,7 @@ static int readConfig(){
 			listener* l=listenerStart(port);
 			if (l){
 				listenersAdd(l);
-				printf("Listener %d added\n",l->sockfd);
+//				printf("Listener %d added\n",l->sockfd);
 			}
 		}else
 		if (strcmp(buf, "sw_total")==0){
@@ -97,7 +97,7 @@ static void default_sigaction(int signal, siginfo_t *si, void *arg){
 }
 
 static void* proceedListener(listener *l, void *arg){
-	printf("added listener %d to listen workers\n", l->sockfd);
+//	printf("added listener %d to listen workers\n", l->sockfd);
 	listenworkersAddWorkAll(l);
 	return 0;
 }
@@ -149,7 +149,7 @@ int main(int argc,char* argv[]){
 //	listenworkersAddWorkAll(listenersAdd(listenerStart(8000)));
 	//do some work
 	main_loop=1;
-	printf("Start main loop\n");
+//	printf("Start main loop\n");
 	do{
 		timePassed(&tv); //start timer
 		//////test
@@ -160,7 +160,7 @@ int main(int argc,char* argv[]){
 		syncTPS(timePassed(&tv),TPS);
 	}while(main_loop);
 	//clearing
-	sleep(1);
+	sleep(2);
 	//deadlock here??
 	socketworkersStopAll();
 	serverworkersStopAll();

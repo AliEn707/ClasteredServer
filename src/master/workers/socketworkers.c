@@ -52,10 +52,11 @@ static void* proceed(void *data, void *_w){
 	worker* w=_w;
 	soketworker_data *wd=w->data;
 	client *c=data;
-	clientMessagesProceed(c, clientMessageEach);
 	int i;
-	for(i=0;i<10;i++)
+	clientMessagesProceed(c, clientMessageEach);
+	for(i=0;i<10;i++){
 		if (socketRecvCheck(c->sock)!=0){
+			c->timestamp=time(0);
 			do{
 				if (packetReceive(&wd->packet, c->sock)>0){
 					if (clientPacketProceed(c, &wd->packet)==0)
@@ -63,11 +64,12 @@ static void* proceed(void *data, void *_w){
 				}
 				w->$works--;
 				c->broken=1;
-				c->timestamp=time(0);
+				printf("error with client\n");
 				return _w;
 			}while(0);
 		}else
 			break;
+	}
 	return 0;
 }
 

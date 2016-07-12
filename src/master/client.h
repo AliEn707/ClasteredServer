@@ -19,6 +19,7 @@ struct {
 	worklist messages;
 	time_t timestamp;
 	char name[30];
+	char passwd[30];
 	char token[30];
 } client;
 

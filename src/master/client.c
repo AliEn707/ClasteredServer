@@ -8,6 +8,7 @@
 #include "../share/containers/bintree.h"
 #include "../share/network/socket.h"
 #include "../share/network/packet.h"
+#include "../share/base64.h"
 #include "../share/system/log.h"
 
 /*
@@ -89,14 +90,16 @@ c=0;
 static void* checkC(bintree_key k, void *v, void *arg){
 	worklist *l=arg;
 	client *c=v;
-	if (c->broken)
-		if (abs(time(0)-c->timestamp)>10)//10 seconds for reconnect
+	if (c->broken || c->id==0)
+		if (abs(time(0)-c->timestamp)>10){//10 seconds for reconnect
 			worklistAdd(l,c);
+		}
 	return 0;
 }
 
 static void* removeC(void *_c, void *arg){
 	client *c=_c;
+	printf("client %d removed\n", c->id);
 	bintreeDel(&clients, c->id, (void(*)(void*))clientClear);
 	return c;
 }
@@ -121,6 +124,7 @@ int clientPacketProceed(client *c, packet *p){
 	buf=packetGetData(p);
 	client_processor processor;
 	//void*(*processor)(packet*);
+	printf("got message %d\n", *buf);
 	if ((processor=messageprocessorClient(*buf))==0){
 //	if (*buf<0){//proxy
 		//add client data to the end
@@ -206,6 +210,7 @@ void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c)){
 int clientSetInfo(client *c, user_info *u){
 	c->id=u->id;
 	sprintf(c->name,"%s",u->name);
+	base64_decode((void*)u->passwd, (void*)c->passwd, strlen(u->passwd));
 	//add other
 	return 0;
 }

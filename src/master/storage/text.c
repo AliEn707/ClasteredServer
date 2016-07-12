@@ -26,6 +26,8 @@ struct{
 
 static files_config files;
 
+#define getUserInfo(f, u) fscanf(f, "%d %s %s", &(u)->id, (u)->name, (u)->passwd)
+
 int storageInit(){
 	storage_config* conf=mainStorageConfig();
 	FILE* f;
@@ -83,7 +85,7 @@ int storageUsers(int(*$)(user_info*,void*arg),void*arg){
 	if (f){
 		while(feof(f)==0){
 			memset(&u,0,sizeof(u));
-			if (fscanf(f, "%d %s\n", &u.id, u.name)==2){
+			if (getUserInfo(f, &u)==2){
 				$(&u, arg);
 			}
 		}
@@ -98,7 +100,7 @@ int storageUserById(int id, user_info* u){
 	FILE *f=fopen(files.users,"rt");
 	if (f){
 		while(feof(f)==0){
-			fscanf(f, "%d %s", &u->id, u->name);
+			getUserInfo(f, u);
 			if (u->id==id){
 				printf("user with id %d found\n", id);
 				break;
@@ -120,7 +122,7 @@ int storageUserByName(char* name, user_info* u){
 	FILE *f=fopen(files.users,"rt");
 	if (f){
 		while(feof(f)==0){
-			fscanf(f, "%d %s", &u->id, u->name);
+			getUserInfo(f, u);
 			if (strcmp(u->name,name)==0){
 				printf("user with name %s found\n", name);
 				$=1;
