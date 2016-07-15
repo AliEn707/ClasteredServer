@@ -130,6 +130,8 @@ int main(int argc,char* argv[]){
 	clientsInit();
 	serversInit();
 	
+	chatsInit();
+	
 	readConfig();
 	storageInit();
 
@@ -168,6 +170,7 @@ int main(int argc,char* argv[]){
 	sleep(1);
 	messageprocessorClear();
 	listenersClear();
+	chatsClear();
 	serversClear();
 	clientsClear();
 	storageClear();
