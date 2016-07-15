@@ -11,6 +11,7 @@ struct {
 typedef
 struct {
 	int id;
+	char login[40];
 	char name[40];
 	char passwd[50];
 } user_info;
@@ -30,6 +31,6 @@ int storageSlaves(int(*f)(slave_info*,void*arg),void*arg);
 
 int storageUsers(int(*f)(user_info*,void*arg),void*arg);
 int storageUserById(int id, user_info* u);
-int storageUserByName(char *name, user_info* u);
+int storageUserByLogin(char *login, user_info* u);
 
 #endif

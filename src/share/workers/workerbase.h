@@ -10,6 +10,7 @@ struct worker{
 	int id;
 	char name[40];
 	int TPS;
+	short recheck;
 	pthread_t pid;
 	//dynamic vars
 	time_t timestamp;

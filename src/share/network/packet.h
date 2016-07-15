@@ -15,12 +15,41 @@ struct{
 
 //create new packet
 packet* packetInit(packet *p);
+#define packetInitFast(p) packetSetSize(p,0)
+
 //add data to packet, if size of packet more than PACKET_SIZE, send it and start new ( )
 int packetAddData(packet *p, void* data, int size);
 
+//universal function data must be variable
 #define packetAddNumber(pack, data) ({\
-		typeof(data) a=byteSwap(data);\
-		packetAddData(pack, &a, sizeof(a));\
+		typeof(data) $=byteSwap(data);\
+		packetAddData(pack, &$, sizeof($));\
+	})
+
+//specific functions for using numbers directly
+#define packetAddChar(pack, data) ({\
+		char $=data;\
+		packetAddData(pack, &$, sizeof($));\
+	})
+
+#define packetAddShort(pack, data) ({\
+		short $=data;$=byteSwap($);\
+		packetAddData(pack, &$, sizeof($));\
+	})
+
+#define packetAddInt(pack, data) ({\
+		int $=data;$=byteSwap($);\
+		packetAddData(pack, &$, sizeof($));\
+	})
+
+#define packetAddFloat(pack, data) ({\
+		float $=data;$=byteSwap($);\
+		packetAddData(pack, &$, sizeof($));\
+	})
+
+#define packetAddDouble(pack, data) ({\
+		double $=data;$=byteSwap($);\
+		packetAddData(pack, &$, sizeof($));\
 	})
 
 #define packetAddString(pack, data) ({\

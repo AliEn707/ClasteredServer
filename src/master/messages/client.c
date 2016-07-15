@@ -53,27 +53,32 @@ static void *message1(client*cl, packet* p){
 		do{
 			if (c==1){
 				user_info u;
-				size=fread(&s,sizeof(s),1,f);//size
-				size=fread(buf,s,1,f);//name
+				size=fread(&s,1,sizeof(s),f);//size
+				for(size=s;size>0;){//must read full string
+					size-=fread(buf,1,s,f);//name, s elements of 1 byte
+				}
 				buf[s]=0;
-				//find client by name
-				if(storageUserByName(buf, &u)==0){//if we found user
+				//find client by login
+				if(storageUserByLogin(buf, &u)==0){//if we found user
 					struct {
-						int p1;
-						long p2;
-					} tokenbase={rand(),time(0)};
+						int $1;
+						long $2;
+					} tokenbase={rand(), time(0)};//uniq token
 					char token[100];
 					clientSetInfo(cl, &u);
+					cl->conn_type=CLIENT_CONN_SOCKET;
 					clientsAdd(cl);
 					MD5_Create((void*)&tokenbase, sizeof(tokenbase), cl->token); //add normal token
 					s=base64_encode((void*)cl->token, (void*)token,16, 0);
-					size=0;
-					buf[0]=2;size++;
-					buf[1]=1;size++;
-					buf[2]=6;size++;
-					memcpy(buf+size,&s,sizeof(s));size+=sizeof(s);
-					memcpy(buf+size,token,s);size+=s;
-					clientMessageAdd(cl, clientMessageNew(buf, size));
+					fclose(f);
+					packetInitFast(p);
+					packetAddChar(p,2);
+					packetAddChar(p,1);
+					packetAddChar(p,6);
+//					packetAddNumber(p,s);
+//					packetAddData(p,token,s);
+					packetAddString(p,token);
+					clientMessageAdd(cl, clientMessageNew(packetGetData(p), packetGetSize(p)));
 					break;
 				}
 			}else if(c==2){
@@ -89,6 +94,12 @@ static void *message1(client*cl, packet* p){
 				printf("token must be %s got %s\n", token, buf);
 				if (strcmp(buf,token)==0){//add normal token check
 					//auth ok
+					fclose(f);
+					packetInit(p);
+					packetAddChar(p, 3);
+					packetAddChar(p, 0);
+					//add other params
+					clientMessageAdd(cl, clientMessageNew(packetGetData(p), packetGetSize(p)));
 					printf("token OK\n");
 					break;
 				}
@@ -101,7 +112,6 @@ static void *message1(client*cl, packet* p){
 			fclose(f);
 			return cl;
 		}while(0);
-		fclose(f);
 	}
 	return 0;
 }

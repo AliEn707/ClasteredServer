@@ -8,6 +8,7 @@ struct {
 	//some worker params
 	char buf[PACKET_SIZE];
 	packet packet;
+	short checks;
 } soketworker_data;
 
 

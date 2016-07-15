@@ -67,7 +67,9 @@ static void * workerbaseThread(void * arg){
 				worklistForEachRemove(&w->works,*w->proceed,w);
 			t_semSet(w->sem,0,1);
 		}
-		syncTPS(timePassed(&tv),w->TPS);
+		if (!w->recheck)
+			syncTPS(timePassed(&tv),w->TPS);
+		w->recheck=0;
 		t_semSet(w->sem,0,-1);
 	}
 	t_semSet(w->sem,0,1);

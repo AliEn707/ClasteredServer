@@ -9,17 +9,22 @@
 #include "../share/network/socket.h"
 #include "../share/network/packet.h"
 
+#define CLIENT_CONN_SOCKET 1
+
 typedef 
 struct {
 	int id;
+	char name[40];
+	char login[40];
+	char passwd[40];
+	
+	short conn_type;
 	short broken;
 	short server_id;
 	socket_t *sock;
 	t_sem_t sem;
 	worklist messages;
 	time_t timestamp;
-	char name[30];
-	char passwd[30];
 	char token[30];
 } client;
 

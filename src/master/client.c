@@ -210,6 +210,7 @@ void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c)){
 int clientSetInfo(client *c, user_info *u){
 	c->id=u->id;
 	sprintf(c->name,"%s",u->name);
+	sprintf(c->login,"%s",u->login);
 	base64_decode((void*)u->passwd, (void*)c->passwd, strlen(u->passwd));
 	//add other
 	return 0;

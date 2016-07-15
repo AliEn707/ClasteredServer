@@ -18,8 +18,8 @@
 ╚══════════════════════════════════════════════════════════════╝
 */
 
-static inline bintree_key reverseKey(bintree_key x){
-	bintree_key o=0;
+static inline bintree_key reverseKey(register bintree_key x){
+	register bintree_key o=0;
 	while (x){
 		o=(o<<1)+(x&1);
 		x>>=1;
