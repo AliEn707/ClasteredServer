@@ -4,7 +4,9 @@
 #include <sys/time.h>
 
 #include "storage.h"
+#include "chat.h"
 #include "../share/containers/worklist.h"
+#include "../share/containers/bintree.h"
 #include "../share/system/t_sem.h"
 #include "../share/network/socket.h"
 #include "../share/network/packet.h"
@@ -24,12 +26,13 @@ struct {
 	socket_t *sock;
 	t_sem_t sem;
 	worklist messages;
+	bintree chats;
 	time_t timestamp;
 	char token[30];
 } client;
 
 typedef 
-struct {
+struct client{
 	packet packet;
 	t_sem_t sem;
 	int num;
@@ -56,6 +59,11 @@ int clientPacketProceed(client *c, packet* p);
 void clientMessageAdd(client *c, client_message *m);
 client_message* clientMessageNew(void* buf, short size);
 void clientMessageClear(client_message* m);
+
+//chats
+void clientChatsAdd(client* cl, void* chat);
+void* clientChatsGet(client* cl, int id);
+void clientChatsRemove(client* cl, void* chat);
 
 //processor for client message queue
 void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c));

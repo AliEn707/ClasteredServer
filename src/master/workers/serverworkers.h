@@ -7,6 +7,7 @@ typedef
 struct {
 	//some worker params
 	packet packet;
+	short checks;
 } serverworker_data;
 
 typedef 

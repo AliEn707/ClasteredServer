@@ -20,6 +20,11 @@
 */
 
 
+#define voidMessageProcessor(i)\
+	static void *message ## i(client*c, packet* p){\
+	clientCheckAuth(c);\
+	return 0;\
+}
 
 #define clientMessageProcessor(id)\
 	messageprocessorClientAdd(id, &message ## id)
@@ -122,7 +127,64 @@ static void *message2(client*c, packet* p){
 	return 0;
 }
 
+voidMessageProcessor(3)
+voidMessageProcessor(4)
+voidMessageProcessor(5)
+voidMessageProcessor(6)
+voidMessageProcessor(7)
+voidMessageProcessor(8)
+voidMessageProcessor(9)
+voidMessageProcessor(10)
+voidMessageProcessor(11)
+voidMessageProcessor(12)
+voidMessageProcessor(13)
+voidMessageProcessor(14)
+voidMessageProcessor(15)
+voidMessageProcessor(16)
+voidMessageProcessor(17)
+voidMessageProcessor(18)
+voidMessageProcessor(19)
+voidMessageProcessor(20)
+voidMessageProcessor(21)
+voidMessageProcessor(22)
+voidMessageProcessor(23)
+voidMessageProcessor(24)
+voidMessageProcessor(25)
+voidMessageProcessor(26)
+voidMessageProcessor(27)
+voidMessageProcessor(28)
+voidMessageProcessor(29)
+voidMessageProcessor(30)
+
 void clientMessageProcessorInit(){
 	clientMessageProcessor(1);
 	clientMessageProcessor(2);
+	clientMessageProcessor(3);
+	clientMessageProcessor(4);
+	clientMessageProcessor(5);
+	clientMessageProcessor(6);
+	clientMessageProcessor(7);
+	clientMessageProcessor(8);
+	clientMessageProcessor(9);
+	clientMessageProcessor(10);
+	clientMessageProcessor(11);
+	clientMessageProcessor(12);
+	clientMessageProcessor(13);
+	clientMessageProcessor(14);
+	clientMessageProcessor(15);
+	clientMessageProcessor(16);
+	clientMessageProcessor(17);
+	clientMessageProcessor(18);
+	clientMessageProcessor(19);
+	clientMessageProcessor(20);
+	clientMessageProcessor(21);
+	clientMessageProcessor(22);
+	clientMessageProcessor(23);
+	clientMessageProcessor(24);
+	clientMessageProcessor(25);
+	clientMessageProcessor(26);
+	clientMessageProcessor(27);
+	clientMessageProcessor(28);
+	clientMessageProcessor(29);
+	clientMessageProcessor(30);
 }

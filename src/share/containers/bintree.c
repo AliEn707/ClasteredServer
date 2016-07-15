@@ -109,6 +109,7 @@ int _bintreeDel(bintree* root, bintree_key key, void (f)(void*v)){//TODO: remove
 	return 0;
 }
 
+//return must not be used
 int bintreeDel(bintree* root, bintree_key key, void (f)(void*v)){
 	int get;
 	int next=key&1;

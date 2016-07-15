@@ -22,6 +22,8 @@ static worker serverworkers[MAX_WORKERS];
 static serverworker_data data[MAX_WORKERS];
 static void init(void* _w){
 	worker* w=_w;
+	serverworker_data *wd=w->data;
+	wd->checks=10;
 	//add some actions for every work element
 	sprintf(w->name,"ServerWorker %d",w->id);
 	printLog("%s created\n",w->name);
@@ -36,7 +38,7 @@ static void* proceed(void *data,void *_w){
 	serverworker_data *wd=w->data;
 	server *s=data;
 	int i;
-	for(i=0;i<10;i++)
+	for(i=0;i<wd->checks;i++){
 		if (socketRecvCheck(s->sock)!=0){
 			if (packetReceive(&wd->packet, s->sock)>0){
 				serverPacketProceed(s, &wd->packet);
@@ -46,9 +48,11 @@ static void* proceed(void *data,void *_w){
 				printf("Server %d connection lost\n", s->id);
 				return data;
 			}
-		}else{
+		}else
 			break;
-		}
+	}
+	if (i>=wd->checks) //when we done wd->checks iterations, we need to recheck without sleep
+		w->recheck=1;
 	return 0;
 }
 

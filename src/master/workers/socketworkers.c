@@ -24,8 +24,8 @@ static soketworker_data data[MAX_WORKERS];
 
 static void init(void *_w){
 	worker* w=_w;
-soketworker_data *wd=w->data;
-wd->checks=10;
+	soketworker_data *wd=w->data;
+	wd->checks=10;
 	//add some actions for every work element
 	sprintf(w->name,"SocketWorker %d",w->id);
 	printLog("%s created\n",w->name);
@@ -72,8 +72,8 @@ static void* proceed(void *data, void *_w){
 		}else
 			break;
 	}
-if (i==wd->checks)
-w->recheck=1;
+	if (i>=wd->checks)
+		w->recheck=1;
 	return 0;
 }
 

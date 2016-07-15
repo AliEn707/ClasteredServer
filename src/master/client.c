@@ -1,6 +1,7 @@
 #include <string.h>
 
 #include "client.h"
+#include "chat.h"
 #include "server.h"
 #include "storage.h"
 #include "messageprocessor.h"
@@ -199,6 +200,39 @@ void clientMessageClear(client_message* m){
 		t_semRemove(m->sem);
 		free(m);
 	}
+}
+
+void clientChatsAdd(client* cl, void* _c){
+	chat *c=_c;
+	t_semSet(cl->sem,0,-1);
+	if (bintreeAdd(&cl->chats, c->id, c)){
+		t_semSet(cl->sem,0,1);
+		chatClientsAdd(c, cl);
+		return;
+	}
+	t_semSet(cl->sem,0,1);
+}
+
+void* clientChatsGet(client* cl, int id){
+	chat *c=0;
+	t_semSet(cl->sem,0,-1);
+		c=bintreeGet(&cl->chats, id);
+	t_semSet(cl->sem,0,1);
+	return c;
+}
+
+void clientChatsRemove(client* cl, void* _c){
+	chat *c=_c;
+	chat* found=0;
+	if (cl==0 || c==0)
+		return;
+	void clientChatsRemoveChat(void* data){
+		found=data;
+	}
+	t_semSet(cl->sem,0,-1);
+		bintreeDel(&cl->chats, c->id, clientChatsRemoveChat);//check for deadlock
+	t_semSet(cl->sem,0,1);
+	chatClientsRemove(found, cl);
 }
 
 void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c)){
