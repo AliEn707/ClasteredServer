@@ -137,10 +137,23 @@ void serverPacketProceed(server *s, packet *p){
 	if ((processor=messageprocessorServer(*((char*)buf)))==0){
 		//remove client data from the end
 		short size=packetGetSize(p);
-		int client_id=*((int*)(buf+(size-=sizeof(client_id))));//check for write size size
-		client* c=0;
-		if (client_id==0 || (c=clientsGet(client_id))!=0){
-			clientMessageAdd(c, clientMessageNew(buf, size));
+		int _id=*((typeof(_id)*)(buf+(size-=sizeof(_id))));//check for write size size
+		char dir=*((typeof(dir)*)(buf+(size-=sizeof(dir))));
+		packetSetSize(p, size);
+		if (dir==MSG_CLIENT){ //redirect packet to client
+			client* c=0;
+			if (_id==0 || (c=clientsGet(_id))!=0){
+				clientMessageAdd(c, clientMessageNew(buf, size));
+			}
+		}else if (dir==MSG_SERVER){ //redirect packet to server
+			server* s=serversGet(_id);
+			packetAddChar(p, MSG_SERVER);//message from server
+			packetAddNumber(p, s->id);
+			if (s){
+				packetSend(p, s->sock);
+			}else if (_id==0){
+				serversPacketSendAll(s, p);
+			}
 		}
 	}else{//proceed by self
 		processor(s, p);
@@ -151,4 +164,16 @@ int serverIdByAddress(char* address, short port){ //return 6 bytes integer
 	char str[400];
 	sprintf(str, "%s%d", address, port);
 	return crc32(str, strlen(str));
+}
+
+static void* serversSendPacket(bintree_key k, void* v, void * p){
+	server* s=v;
+	packetSend(p, s->sock);
+	return 0;
+}
+
+void serversPacketSendAll(server *s, packet* p){
+	t_semSet(sem,0,-1);
+		bintreeForEach(&servers, serversSendPacket, p);
+	t_semSet(sem,0,1);
 }

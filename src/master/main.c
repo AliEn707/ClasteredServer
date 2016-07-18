@@ -6,6 +6,7 @@
 #include <unistd.h>
 
 #include "main.h"
+#include "chat.h"
 #include "client.h"
 #include "server.h"
 #include "listeners.h"
@@ -159,6 +160,7 @@ int main(int argc,char* argv[]){
 		//////
 		serversCheck();
 		clientsCheck();
+		chatsCheck();
 		syncTPS(timePassed(&tv),TPS);
 	}while(main_loop);
 	//clearing
@@ -175,5 +177,6 @@ int main(int argc,char* argv[]){
 	clientsClear();
 	storageClear();
 	printf("Exiting\n");
+	sleep(1);
 	return 0;
 }

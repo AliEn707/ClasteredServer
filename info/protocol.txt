@@ -28,7 +28,8 @@ proxy packet structure
 	char //id
 	...
 	//service data
-	int //user id, for message from 0 == broadcast
+	char //0 client, 1 server
+	int //id, for message from 0 == broadcast
 }
 
 text messages
@@ -98,5 +99,6 @@ to client <-{ //success message
 	char //3-user info
 	char n //number of fields
 	char[n] //field types, in strict order
+	//field values
 }
 //auth successed

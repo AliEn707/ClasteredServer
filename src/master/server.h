@@ -2,9 +2,12 @@
 #define SERVER_HEADER
 
 
+#include "../share/containers/bintree.h"
 #include "../share/containers/worklist.h"
 #include "../share/network/socket.h"
 #include "../share/network/packet.h"
+
+#define MSG_SERVER 1
 
 typedef 
 struct {
@@ -13,6 +16,8 @@ struct {
 	socket_t *sock;
 	char host[100];
 	short port;
+	
+	bintree clients;
 } server;
 
 //initialization
@@ -34,6 +39,7 @@ int serversGetIdAuto();
 
 //processor for packet from server
 void serverPacketProceed(server* s, packet* p);
+void serversPacketSendAll(server *s, packet* p);
 
 //create uniq id by server address and port
 int serverIdByAddress(char* address, short port); 

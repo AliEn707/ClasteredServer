@@ -58,9 +58,25 @@ client* clientNew(socket_t *sock){
 	return c;
 }
 
+static void* clientChatsRemoveEach(bintree_key k, void *v, void *arg){
+	worklistAdd(arg, v);
+	return 0;
+}
+
+static void* clientChatsRemoveList(void *c, void *arg){
+	chatClientsRemove(c,arg);
+	return arg;
+}
+
 void clientClear(client* c){
 	if (c==0)
 		return;
+	worklist list;
+	memset(&list, 0, sizeof(list));
+	t_semSet(c->sem,0,-1);
+		bintreeForEach(&c->chats, clientChatsRemoveEach, &list);//check for deadlock
+	t_semSet(c->sem,0,1);
+	worklistForEachRemove(&list, clientChatsRemoveList, c);
 	t_semSet(c->sem,0,-1);
 		socketClear(c->sock);
 		worklistErase(&c->messages, (void(*)(void*))clientMessageClear);
@@ -129,6 +145,7 @@ int clientPacketProceed(client *c, packet *p){
 	if ((processor=messageprocessorClient(*buf))==0){
 //	if (*buf<0){//proxy
 		//add client data to the end
+		packetAddChar(p, MSG_CLIENT);
 		packetAddNumber(p, c->id);
 		server* s=serversGet(c->server_id);
 		if (s){

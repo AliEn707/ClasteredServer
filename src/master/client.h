@@ -12,6 +12,7 @@
 #include "../share/network/packet.h"
 
 #define CLIENT_CONN_SOCKET 1
+#define MSG_CLIENT 0
 
 typedef 
 struct {

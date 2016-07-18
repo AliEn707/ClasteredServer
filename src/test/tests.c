@@ -1,14 +1,17 @@
 #include <string.h>
+#include <stdio.h>
 
 #include "../share/containers/bintree.h"
 #include "../share/system/log.h"
+#include "../master/client.h"
+#include "../master/chat.h"
 
 struct {
 	log_config log;
 	short run;
 } config;
 
-log_config* logConfig(){
+log_config* mainLogConfig(){
 	return &config.log;
 }
 

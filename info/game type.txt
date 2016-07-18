@@ -1,0 +1,5 @@
+game types
+
+kki, room based
+classic rpg, location based
+survival rpg, location based

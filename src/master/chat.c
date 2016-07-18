@@ -60,9 +60,9 @@ void chatClear(chat* c){
 	worklist list;
 	memset(&list,0,sizeof(list));
 	t_semSet(c->sem,0,-1);
-		bintreeForEach(&chats, clearR, &list);
-		worklistForEachRemove(&list, removeR, c);
+		bintreeForEach(&c->clients, clearR, &list);
 	t_semSet(c->sem,0,1);
+	worklistForEachRemove(&list, removeR, c);
 	t_semRemove(c->sem);
 	free(c);
 }
@@ -101,7 +101,7 @@ void chatClientsRemove(chat* c, void* _client){
 }
 
 int chatsAdd(chat* c){
-	if (c->id!=0){
+	if (c && c->id!=0){
 		t_semSet(sem,0,-1);
 			bintreeAdd(&chats, c->id, c);
 		t_semSet(sem,0,1);
@@ -129,7 +129,9 @@ static void* checkC(bintree_key k, void *v, void *arg){
 static void* removeC(void *_c, void *arg){
 	chat *c=_c;
 	printf("chat %d removed\n", c->id);
-	bintreeDel(&chats, c->id, (void(*)(void*))chatClear);
+	t_semSet(sem,0,-1);
+		bintreeDel(&chats, c->id, (void(*)(void*))chatClear);
+	t_semSet(sem,0,1);
 	return c;
 }
 
@@ -138,8 +140,8 @@ void chatsCheck(){
 	memset(&list,0,sizeof(list));
 	t_semSet(sem,0,-1);
 		bintreeForEach(&chats, checkC, &list);
-		worklistForEachRemove(&list, removeC, 0);
 	t_semSet(sem,0,1);
+	worklistForEachRemove(&list, removeC, 0);
 }
 
 void chatsRemove(chat* c){
@@ -147,4 +149,69 @@ void chatsRemove(chat* c){
 		bintreeDel(&chats, c->id, (void(*)(void*))chatClear);
 	t_semSet(sem,0,1);
 }
+
+
+/*
+
+void chats_test(){
+	void* chatP(bintree_key k, void* v, void* arg){
+		client* c=v;
+		printf("chat %d\n", c->id);
+		return 0;
+	}
+	void* clientP(bintree_key k, void* v, void* arg){
+		client* c=v;
+		printf("client %d\n", c->id);
+		return 0;
+	}
+	printf("chats test\n");
+	client* c[3]={
+		clientNew(socketNew(0)),
+		clientNew(socketNew(0)),
+		clientNew(socketNew(0))
+	};
+	chat * ch=chatNew();
+	chat * ch2=chatNew();
+	c[0]->id=1;
+	c[1]->id=2;
+	c[2]->id=3;
+	ch->id=1;
+	ch2->id=2;
+	clientChatsAdd(c[0], ch);
+//	clientChatsAdd(c[1], ch);
+	bintreeForEach(&c[0]->chats, chatP, 0);
+	bintreeForEach(&c[1]->chats, chatP, 0);
+	bintreeForEach(&ch->clients, clientP, 0);
+	chatClientsRemove(ch,c[0]);
+	printf("removed client 0\n");
+	bintreeForEach(&c[0]->chats, chatP, 0);
+	bintreeForEach(&c[1]->chats, chatP, 0);
+	bintreeForEach(&ch->clients, clientP, 0);
+	clientChatsAdd(c[0], ch);
+	clientChatsAdd(c[0], ch2);
+	chatClientsAdd(ch,c[2]);
+	printf("added 2\n");
+	bintreeForEach(&c[0]->chats, chatP, 0);
+	bintreeForEach(&c[1]->chats, chatP, 0);
+	bintreeForEach(&ch->clients, clientP, 0);
+	printf("clear\n");
+	clientClear(c[0]);
+	bintreeForEach(&c[0]->chats, chatP, 0);
+	bintreeForEach(&c[1]->chats, chatP, 0);
+	
+	printf("success\n");
+}
+
+log_config config={0};
+
+log_config* mainLogConfig(){
+	return &config;
+}
+
+int main(int argc,char* argv[]){
+	config.log.debug=1;
+	chats_test();
+	return 0;
+
+*/
 

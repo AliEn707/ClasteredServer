@@ -1,0 +1,40 @@
+params:
+	id
+	login
+	name
+	passwd
+
+storing attributes on client:
+
+attributes->
+bintree | key attribute_name int (4 chars)
+	bintree | key preserved attribute id int
+		string | 
+	
+//first key may be "live", "gold", "_lvl" and etc. (fixed 4 chars)
+//may be used crc32 of full name of attribute for key
+
+[attributes]
+//attribute name
+attr1.attr2.attr3
+
+{text}
+string in attributes/#user# file
+
+{sql}
+users
+	attr1_id ->
+attr1s
+	attr2_id ->
+attr2s
+	attr3
+	
+	
+[servers]
+client has one server
+server has many clients
+client stores server id
+server stores client pointers (bintree)
+
+//client attachet to server on connection
+//rooms are implemented on slave servers
