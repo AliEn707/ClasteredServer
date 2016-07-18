@@ -46,15 +46,15 @@ static void *message1(client*cl, packet* p){
 	printf("client auth\n");
 	if (f){	
 		size=fread(&c,sizeof(c),1,f);//
-		printf("%d\n",c);
+//		printf("%d\n",c);
 		size=fread(&c,sizeof(c),1,f);
-		printf("%d\n",c);
+//		printf("%d\n",c);
 		for(i=c;i>0;i--){
 			size=fread(&c,sizeof(c),1,f);
-			printf("%d\n",c);
+//			printf("%d\n",c);
 		}
 		size=fread(&c,sizeof(c),1,f);
-		printf("%d\n",c);
+//		printf("%d\n",c);
 		do{
 			if (c==1){
 				user_info u;

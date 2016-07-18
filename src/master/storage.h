@@ -33,4 +33,11 @@ int storageUsers(int(*f)(user_info*,void*arg),void*arg);
 int storageUserById(int id, user_info* u);
 int storageUserByLogin(char *login, user_info* u);
 
+int storageAttributeGet(int id, const char* k, char* out);
+int storageAttributeSet(int id, const char* k, const char* v);
+
+int storageAttributesGet(int id, char** k, char** out, short size);
+int storageAttributesForEach(int id, char** ks, short size, void*(f)(char* k,char*v, void*arg), void*arg);
+int storageAttributesSet(int id, char** k, char** v, short size);
+
 #endif
