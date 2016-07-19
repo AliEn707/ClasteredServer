@@ -13,11 +13,13 @@ typedef
 struct {
 	int id;
 	short broken;
+	short checked;
 	socket_t *sock;
 	char host[100];
 	short port;
-	
+	t_sem_t sem;
 	bintree clients;
+	int $clients;
 } server;
 
 //initialization
@@ -43,5 +45,9 @@ void serversPacketSendAll(server *s, packet* p);
 
 //create uniq id by server address and port
 int serverIdByAddress(char* address, short port); 
+
+//
+int serversClientsAdd(server *s, void* c);
+int serversClientsRemove(server *s, void* c);
 
 #endif

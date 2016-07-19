@@ -46,7 +46,7 @@ static void *message1(server *sv, packet *p){
 		size=fread(&c,sizeof(c),1,f);//packet type
 		size=fread(&c,sizeof(c),1,f);//attributes number
 //		printf("%d\n",c);
-		$keys=c;
+		$keys=c-1;
 		for(i=c;i>0;i--){
 			size=fread(&c,sizeof(c),1,f);
 //			printf("%d\n",c);
@@ -64,7 +64,7 @@ static void *message1(server *sv, packet *p){
 			}
 			fclose(f);
 			packetInitFast(p);
-			packetAddChar(p, 1);
+			packetAddChar(p, MSG_S_CLIENT_ATTRIBUTES);
 			packetAddChar(p, $keys*2+1);
 			packetAddChar(p, 3);//int
 			for(i=0;i<$keys*2;i++){
@@ -72,6 +72,7 @@ static void *message1(server *sv, packet *p){
 			}
 			packetAddNumber(p, id);//int
 			storageAttributesForEach(id, keys, $keys, addAttrToPacket, p);
+			packetSend(p, sv->sock);
 			
 			for(i=0;i<$keys;i++){
 				free(keys[i]);
@@ -86,7 +87,32 @@ static void *message1(server *sv, packet *p){
 }
 
 ///set client attributes {2, n, 3, 6[n], int, string[n]} key value pairs of strings of attributes
-static void *message2(server *s, packet *p){
+static void *message2(server *sv, packet *p){
+	char **keys, **values, *data=packetGetData(p);
+	char c=*(data++);
+	short s, $keys=(c-1)/2;
+	int i, id=*((typeof(id)*)(data+=c));
+	data+=sizeof(id);
+	if((keys=malloc($keys*sizeof(*keys)))!=0){
+		if((values=malloc($keys*sizeof(*values)))!=0){
+			for(i=0;i<$keys;i++){
+				s=*((typeof(s)*)data);
+				*data=0;
+				data+=sizeof(s);
+				keys[i]=data;
+				data+=s;
+				s=*((typeof(s)*)data);
+				*data=0;
+				data+=sizeof(s);
+				values[i]=data;
+				data+=s;
+			}
+			storageAttributesSet(id, keys, values, $keys);
+			//add success message
+			free(values);
+		}
+		free(keys);
+	}
 	return 0;
 }
 

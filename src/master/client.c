@@ -266,3 +266,8 @@ int clientSetInfo(client *c, user_info *u){
 	//add other
 	return 0;
 }
+
+void clientClearServer(client* c){
+	if (c)
+		c->server_id=0;
+}

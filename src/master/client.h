@@ -70,4 +70,6 @@ void clientChatsRemove(client* cl, void* chat);
 void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c));
 
 int clientSetInfo(client *c, user_info *u);
+
+void clientClearServer(client* c);
 #endif

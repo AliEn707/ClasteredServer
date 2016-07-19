@@ -11,16 +11,13 @@ bintree | key attribute_name int (4 chars)
 	bintree | key preserved attribute id int
 		string | 
 	
-//first key may be "live", "gold", "_lvl" and etc. (fixed 4 chars)
-//may be used crc32 of full name of attribute for key
+//may be used cashing with crc32 of full name of attribute as key
 
 [attributes]
 //attribute name
-attr1.attr2.attr3
-
+attr1>attr2>attr3
 {text}
 string in attributes/#user# file
-
 {sql}
 users
 	attr1_id ->
@@ -28,7 +25,38 @@ attr1s
 	attr2_id ->
 attr2s
 	attr3
-	
+-----------
+level ->
+	select level from users where user.id=?
+hero>level -> 
+	select level from heros 
+		join users on heros.id=users.hero_id where users.id=?
+-> level=1
+
+hero<>helm[].id -> 
+	select id from helms h 
+		join helms_users hu on h.id=hu.helm_id 
+		join users u on hu.user_id=u.id where users.id=?
+-> hero.helm[1].id=1, hero.helm[2].id=2, ...
+
+hero<helm[].id -> 
+	select id from helms h 
+		join users u on h.user_id=u.id where users.id=?
+-> hero.helm[1].id=1, hero.helm[2].id=2, ...
+
+hero<>helm[1].id -> 
+	select id from helms h 
+		join helms_users hu on h.id=hu.helm_id 
+		join users u on hu.user_id=u.id where users.id=? and h.id in (1)
+-> hero.helm[1].id
+
+.helm[1,2].id -> 
+	select id from helms h where h.id in (1,2)
+-> .helm[1].id=1, .helm[1].id=2
+
+.helm[1]>userhelm(!).id -> 
+	select id from userhelm uh 
+		join helms h on uh.user_id=? where helms.id in (1)
 	
 [servers]
 client has one server

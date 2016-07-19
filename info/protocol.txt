@@ -15,9 +15,10 @@ standart packet structure
 {
 	short //size of message, then will be size bytes - message data, please don't use message more than 65000 bytes long
 	char //message type
-	//message body
+	//message header
 	char n //number of elements
 	char[n] //n types of elements
+	//message body
 	...
 }
 

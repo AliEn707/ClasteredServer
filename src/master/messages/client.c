@@ -77,7 +77,7 @@ static void *message1(client*cl, packet* p){
 					s=base64_encode((void*)cl->token, (void*)token,16, 0);
 					fclose(f);
 					packetInitFast(p);
-					packetAddChar(p,2);
+					packetAddChar(p,MSG_C_AUTH_TOKEN);
 					packetAddChar(p,1);
 					packetAddChar(p,6);
 //					packetAddNumber(p,s);
@@ -101,8 +101,12 @@ static void *message1(client*cl, packet* p){
 					//auth ok
 					fclose(f);
 					packetInit(p);
+					packetAddChar(p, MSG_C_USER_INFO);
+					packetAddChar(p, 2);
 					packetAddChar(p, 3);
-					packetAddChar(p, 0);
+					packetAddChar(p, 6);
+					packetAddNumber(p, cl->id);
+					packetAddString(p, cl->name);
 					//add other params
 					clientMessageAdd(cl, clientMessageNew(packetGetData(p), packetGetSize(p)));
 					printf("token OK\n");

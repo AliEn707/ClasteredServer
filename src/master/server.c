@@ -48,11 +48,18 @@ server *serverNew(char* host, short port){
 	sprintf(s->host, "%s", host);
 	s->port=port;
 	if ((s->sock=socketConnect(s->host, s->port))==0){
+		perror("socketConnect");
 		serverClear(s);
+		return 0;
 	}
+	if ((s->sem=t_semGet(1))==0){
+		perror("t_semGet");
+		serverClear(s);
+		return 0;
+	}
+	t_semSet(s->sem,0,1);
 	//TODO: add auth 
 	s->id=serverIdByAddress(host,port);
-	serversAdd(s);
 	return s;
 }
 
@@ -66,6 +73,12 @@ server* serverReconnect(server *s){
 }
 
 void serverClear(server* s){
+	if (s==0)
+		return;
+	t_semSet(s->sem,0,-1);
+		bintreeErase(&s->clients, (void(*)(void*))clientClearServer);
+	t_semSet(s->sem,0,1);
+	t_semRemove(s->sem);
 	socketClear(s->sock);
 	free(s);
 }
@@ -83,46 +96,88 @@ server *serversGet(int id){
 	server *s;
 	t_semSet(sem,0,-1);
 		s=bintreeGet(&servers, id);
-if (s!=0 && s->broken)
-s=0;
+	if (s!=0 && s->broken)
+		s=0;
 	t_semSet(sem,0,1);
 	return s;
 }
 
-static void* checkS(bintree_key k, void *v, void *arg){
-	server *s=v;
-	if (s->broken){
-		if (s->sock){
-			socketClear(s->sock);
-			s->sock=0;
-		}
-		s->broken=(serverReconnect(s)==0);//if success => !=0 ==> broken ==0
-	}
-	return 0;
-}
-
-void serversCheck(){
-	t_semSet(sem,0,-1);
-		bintreeForEach(&servers, checkS, 0);
-	t_semSet(sem,0,1);
-}
+typedef
+struct server_search_params{
+	int id;
+	int val;
+} server_search_params;
 
 static void* findAuto(bintree_key k, void *v, void *arg){
-	int *id=arg;
+	server_search_params *d=arg;
 	server *s=v;
-	if (!s->broken){
-		*id=s->id;
-		return &s->id;
+	if (!s->broken && d->val>=s->$clients){
+		d->id=s->id;
+		d->val=s->$clients;
+//		return &s->id;
 	}
 	return 0;
 }
 
 int serversGetIdAuto(){//TODO: change to find free
-	int id=0;
+	server_search_params d={0};
 	t_semSet(sem,0,-1);
-		bintreeForEach(&servers, findAuto, &id);
+		bintreeForEach(&servers, findAuto, &d);
 	t_semSet(sem,0,1);
-	return id;
+	return d.id;
+}
+
+static void* setUncheck(bintree_key k, void *v, void *arg){
+	server *s=v;
+	s->checked=0;
+	return 0;
+}
+
+static void* checkS(bintree_key k, void *v, void *arg){
+	server *s=v;
+	if (s->checked==0){
+		worklistAdd(arg, v);
+	}
+	return 0;
+}
+
+static int checkSlaves(slave_info *si,void *arg){
+	int id=serverIdByAddress(si->host, si->port);
+	server *s=bintreeGet(&servers, id);
+	if (s==0){
+		s=serverNew(si->host, si->port);
+		bintreeAdd(&servers, id, s);
+	}else{
+		if (s->broken)
+			serverReconnect(s);
+	}
+	if (s && !s->broken){
+		s->checked=1;
+		//add message server created
+	}
+	return 0;
+}
+
+static void* checkR(void *v, void *arg){
+	server *s=v;
+	serverClear(s);
+	//add move users
+	return v;
+}
+
+void serversCheck(){
+	worklist l;
+	memset(&l,0,sizeof(l));
+	t_semSet(sem,0,-1);
+		bintreeForEach(&servers, setUncheck, 0);
+	t_semSet(sem,0,1);
+	t_semSet(sem,0,-1);
+		storageSlaves(checkSlaves, 0);
+	t_semSet(sem,0,1);
+	t_semSet(sem,0,-1);
+		bintreeForEach(&servers, checkS, &l);
+	t_semSet(sem,0,1);
+	worklistForEachRemove(&l,checkR, 0);
 }
 
 void serversRemove(server* s){
@@ -176,4 +231,23 @@ void serversPacketSendAll(server *s, packet* p){
 	t_semSet(sem,0,-1);
 		bintreeForEach(&servers, serversSendPacket, p);
 	t_semSet(sem,0,1);
+}
+
+int serverClientsAdd(server *s, void *_c){
+	client *c=_c;
+	c->server_id=s->id;
+	t_semSet(s->sem,0,-1);
+		bintreeAdd(&s->clients, c->id, c);
+		s->$clients++;
+	t_semSet(s->sem,0,1);
+	return 0;
+}
+
+int serverClientsRemove(server *s, void *_c){
+	client *c=_c;
+	t_semSet(s->sem,0,-1);
+		bintreeDel(&s->clients, c->id, (void(*)(void*))clientClearServer);
+	s->$clients--;
+	t_semSet(s->sem,0,1);
+	return 0;
 }
