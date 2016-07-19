@@ -17,8 +17,9 @@ standart packet structure
 	char //message type
 	//message header
 	char n //number of elements
-	char[n] //n types of elements
 	//message body
+	char //element type
+	//element
 	...
 }
 
@@ -38,10 +39,13 @@ text messages
 	short //size
 	char //101
 	char //4
-	char[4] //[3,2,1,6]
+	char //3
 	int //chat id
+	char //2
 	short //item id
+	char //1
 	char //packet type, start/continue/end - (&3== 1/2/3)
+	char //6
 	string //message data
 }
 
@@ -75,8 +79,8 @@ to client <-{ //success message
 	char //1
 	char //2
 	char //1
+	char //1 //mes type
 	char //6
-	char //1
 	string //login
 }
 
@@ -91,8 +95,8 @@ to client <-{ //success message
 	char //1
 	char //2
 	char //1
-	char //6
 	char //2
+	char //6
 	string //hashed password
 }
 

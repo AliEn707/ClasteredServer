@@ -6,6 +6,7 @@
 #include "../../share/containers/worklist.h"
 #include "../../share/workers/workerbase.h"
 #include "../../share/system/log.h"
+#include "../../share/system/types.h"
 #include "../client.h"
 
 /*
@@ -36,13 +37,17 @@ static void loop(void *_w){
 }
 
 
-static void* clientMessageEach(void* d, void * _c){
+static void* clientMessageEach(void* d, void * _arg){
 	client_message* m=d;
-	client *c=_c;
+	voidp2_t *arg=_arg;
+	client *c=arg->p1;
+	packet *p=arg->p2;
 	t_semSet(m->sem,0,-1);
 	if (m->ready){
 		t_semSet(m->sem,0,1);
-		packetSend(&m->packet,c->sock);
+		packetInitFast(p);
+		packetAddData(p,m->data,m->$data);
+		packetSend(p,c->sock);
 		clientMessageClear(m);
 		return d;
 	}
@@ -55,7 +60,7 @@ static void* proceed(void *data, void *_w){
 	soketworker_data *wd=w->data;
 	client *c=data;
 	int i;
-	clientMessagesProceed(c, clientMessageEach);
+	clientMessagesProceed(c, clientMessageEach, &wd->packet);
 	for(i=0;i<wd->checks;i++){
 		if (socketRecvCheck(c->sock)!=0){
 			c->timestamp=time(0);

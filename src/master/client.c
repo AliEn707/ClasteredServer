@@ -10,6 +10,7 @@
 #include "../share/network/socket.h"
 #include "../share/network/packet.h"
 #include "../share/base64.h"
+#include "../share/system/types.h"
 #include "../share/system/log.h"
 
 /*
@@ -200,12 +201,21 @@ client_message* clientMessageNew(void* buf, short size){
 		return 0;
 	}
 	memset(m,0,sizeof(*m));
+	m->$data=size;
+	if ((m->data=malloc(sizeof(*m->data)*(m->$data+1)))==0){
+		perror("malloc");
+		free(m);
+		return 0;
+	}
+	memcpy(m->data, buf, m->$data);
+	m->data[m->$data]=0;
 	if ((m->sem=t_semGet(1))==0){
+		free(m->data);
 		free(m);
 		return 0;
 	}
 	t_semSet(m->sem,0,1);
-	packetAddData(&m->packet,buf,size);
+	//packetAddData(&m->packet,buf,size);
 	return m;
 }
 
@@ -215,6 +225,7 @@ void clientMessageClear(client_message* m){
 	t_semSet(m->sem,0,1);
 	if (m->num==0){	
 		t_semRemove(m->sem);
+		free(m->data);
 		free(m);
 	}
 }
@@ -252,9 +263,10 @@ void clientChatsRemove(client* cl, void* _c){
 	chatClientsRemove(found, cl);
 }
 
-void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c)){
+void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c), void *a){
+	voidp2_t arg={c, a};
 	t_semSet(c->sem,0,-1);
-		worklistForEachRemove(&c->messages, me,c);
+		worklistForEachRemove(&c->messages, me, &arg);
 	t_semSet(c->sem,0,1);
 }
 

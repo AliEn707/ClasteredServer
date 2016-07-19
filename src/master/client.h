@@ -34,7 +34,9 @@ struct {
 
 typedef 
 struct client{
-	packet packet;
+//	packet packet;
+	char * data;
+	short $data;
 	t_sem_t sem;
 	int num;
 	short ready;
@@ -67,7 +69,7 @@ void* clientChatsGet(client* cl, int id);
 void clientChatsRemove(client* cl, void* chat);
 
 //processor for client message queue
-void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c));
+void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c), void * arg);
 
 int clientSetInfo(client *c, user_info *u);
 

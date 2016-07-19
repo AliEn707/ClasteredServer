@@ -135,11 +135,6 @@ int main(int argc,char* argv[]){
 	
 	readConfig();
 	storageInit();
-	char buf[100];
-	storageAttributeGet(1,"test", buf);
-	storageAttributeSet(1,"test1", buf);
-	printf("%s \n", buf);
-	return 0;
 	
 	clientMessageProcessorInit();
 	serverMessageProcessorInit();
