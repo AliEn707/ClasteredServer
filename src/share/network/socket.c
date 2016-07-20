@@ -125,25 +125,26 @@ int socketSend(socket_t *sock, void * buf, int size){
 
 int socketRecv(socket_t *sock, void * buf, int size){
 	int need=size;
-	int get;
-	get=recv(sock->sockfd,buf,need,MSG_DONTWAIT);
-	if (get==0)
+	int got;
+	got=recv(sock->sockfd,buf,need,MSG_DONTWAIT);
+	if (got==0)
 		return 0;
-	if (get<0)
+	if (got<0)
 		if (errno!=EAGAIN)
 			return -1;
-	if (get==need)
-		return get;
-	printf("get not all\n");
+	if (got==need)
+		return got;
+	printf("got not all\n");
 	int $_$=0;
 	do{
 		printf("try %d to read %d\n", $_$, need);
-		if (get>0)
-			need-=get;
+		if (got>0)
+			need-=got;
 //		printf("try to get\n");
-		if((get=recv(sock->sockfd,buf+(size-need),need,MSG_DONTWAIT))<=0)
+		if((got=recv(sock->sockfd,buf+(size-need),need,MSG_DONTWAIT))<=0)
 			if (errno!=EAGAIN)
 				return -1;
+//		printf("got %d\n", got);
 		usleep(RECV_SLEEP_TIME);
 		$_$++;
 		if ($_$>RECV_MAX_RETRIES)//max tries of read

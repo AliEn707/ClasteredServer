@@ -9,35 +9,25 @@ port = 8000#gets.to_i
 
 s = TCPSocket.open(hostname, port)
 
+login="qwer"
+
 #puts connected
-s.write [9].pack("v")
-s.write [0].pack("c")
-s.write [1].pack("c")
-s.write [6].pack("c")
-s.write [4].pack("v")
-s.write "qwer"
+s.write [9,0,1,6,login.size].pack("vcccv")
+s.write login
+
 #s.write [4232].pack("l")
 #s.write [1].pack("l")
 p a=s.read(6).unpack("vcccc")
-s.write [10].pack("v")
-s.write [1].pack("c")
-s.write [1].pack("c")
-s.write [6].pack("c")
-s.write [1].pack("c")
-s.write [4].pack("v")
-s.write "qwer"
+s.write [login.size+7,1,2,1,1,6,login.size].pack("vcccccv")
+puts s.write login
 p a=s.read(7).unpack("vcccv")
 p b64=s.read(a[-1])
-passwd="qwer"
+
+passwd= login
 p ans=Base64.encode64(Digest::MD5.digest(Base64.decode64(b64)+Digest::MD5.digest(passwd))).chomp
-s.write [ans.size+7].pack("v")
-s.write [1].pack("c")
-s.write [2].pack("c")
-s.write [1].pack("c")
-s.write [6].pack("c")
-s.write [2].pack("c")
-s.write [ans.size].pack("v")
+s.write [ans.size+7,1,2,1,2,6,ans.size].pack("vcccccv")
 s.write ans
+
 p size=s.read(2).unpack("v")[0]
 p s.read(size)
 #p s.read(1)

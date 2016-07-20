@@ -138,8 +138,7 @@ void clientsRemove(client* c){
 }
 
 int clientPacketProceed(client *c, packet *p){
-	char* buf;
-	buf=packetGetData(p);
+	char* buf=packetGetData(p);
 	client_processor processor;
 	//void*(*processor)(packet*);
 	printf("got message %d\n", *buf);
@@ -149,14 +148,20 @@ int clientPacketProceed(client *c, packet *p){
 		packetAddChar(p, MSG_CLIENT);
 		packetAddNumber(p, c->id);
 		server* s=serversGet(c->server_id);
-		if (s){
-			packetSend(p, s->sock);
-		}else{
-			printf("client %d server %d error\n", c->id, c->server_id);
-			return 1;
+		if (s==0){
+			int id=serversGetIdAuto();
+			if ((s=serversGet(id))!=0){
+				serverClientsAdd(s, c);
+			}else{
+				socketClear(c->sock);
+				c->sock=0;
+				printf("client %d server %d error\n", c->id, c->server_id);
+				return 1;
+			}
 		}
+		packetSend(p, s->sock);
 	}else{//proceed by self
-		processor(c, p);
+		return processor(c, p)!=0;
 	}
 	return 0;
 }

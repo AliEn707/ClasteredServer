@@ -6,6 +6,15 @@
 #include "../system/log.h"
 #include "packet.h"
 
+packet* packetNew(short size){
+	packet *p=0;
+	if (size==0)
+		size=sizeof(packet);
+	if ((p=malloc(size))!=0)
+		memset(p,0,size);
+	return p;
+}
+
 //init packet
 packet* packetInit(packet *p){
 	if (p==0)
@@ -72,5 +81,5 @@ void *packetGetData(packet *p){
 }
 
 FILE *packetGetStream(packet *p){
-	return fmemopen(p->buf, p->$buf, "r+");
+	return fmemopen(p->buf, p->$buf, "r");
 }

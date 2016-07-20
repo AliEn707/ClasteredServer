@@ -112,7 +112,9 @@ int main(int argc,char* argv[]){
 	int TPS=10;  //ticks per sec
 	struct timeval tv={0,0};
 	struct sigaction sa;
-	
+	struct {
+		time_t servers_check;
+	} timestamps={0};
 	sigemptyset(&sa.sa_mask);
 	sa.sa_sigaction = default_sigaction;
 	sa.sa_flags   = SA_SIGINFO;
@@ -153,12 +155,17 @@ int main(int argc,char* argv[]){
 	//do some work
 	main_loop=1;
 //	printf("Start main loop\n");
+	time_t timestamp;
 	do{
+		timestamp=time(0);
 		timePassed(&tv); //start timer
 		//////test
 		
 		//////
-		serversCheck();
+		if (timestamp-timestamps.servers_check>=5){
+			serversCheck();
+			timestamps.servers_check=timestamp;
+		}
 		clientsCheck();
 		chatsCheck();
 		syncTPS(timePassed(&tv),TPS);

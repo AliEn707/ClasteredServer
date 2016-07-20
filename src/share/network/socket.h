@@ -56,7 +56,7 @@ int socketRecv(socket_t *sock, void *buf, int size);
 			$x=byteSwap($x);\
 			if ((__x=socketRecv(sock,x,$x))>0){\
 				_x+=__x;\
-				x[$x]=0;\
+				x[__x]=0;\
 			}else\
 			_x=__x;\
 		}\

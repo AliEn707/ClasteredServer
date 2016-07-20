@@ -14,6 +14,8 @@ struct{
 } packet;
 
 //create new packet
+packet* packetNew(short size);
+
 packet* packetInit(packet *p);
 #define packetInitFast(p) packetSetSize(p,0)
 

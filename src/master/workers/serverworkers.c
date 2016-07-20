@@ -47,6 +47,7 @@ static void* proceed(void *data,void *_w){
 				s->broken=1;
 				printf("Server %d connection lost\n", s->id);
 				//serversPacketSendAll();
+				//serversEach();
 				return data;
 			}
 		}else

@@ -47,7 +47,7 @@ void serversPacketSendAll(server *s, packet* p);
 int serverIdByAddress(char* address, short port); 
 
 //
-int serversClientsAdd(server *s, void* c);
-int serversClientsRemove(server *s, void* c);
+int serverClientsAdd(server *s, void* c);
+int serverClientsRemove(server *s, void* c);
 
 #endif

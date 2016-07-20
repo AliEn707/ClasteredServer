@@ -102,8 +102,10 @@ to client <-{ //success message
 
 <-{//on success
 	char //3-user info
-	char n //number of fields
-	char[n] //field types, in strict order
-	//field values
+	char //2 number of fields
+	char //3 
+	int //id
+	char //6 
+	string //name
 }
 //auth successed

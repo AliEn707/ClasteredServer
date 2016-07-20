@@ -1,5 +1,6 @@
 #include <string.h>
 
+#include "messages/server.h"
 #include "server.h"
 #include "client.h"
 #include "messageprocessor.h"
@@ -235,19 +236,39 @@ void serversPacketSendAll(server *s, packet* p){
 
 int serverClientsAdd(server *s, void *_c){
 	client *c=_c;
+	packet *p;
 	c->server_id=s->id;
 	t_semSet(s->sem,0,-1);
 		bintreeAdd(&s->clients, c->id, c);
 		s->$clients++;
 	t_semSet(s->sem,0,1);
+	if ((p=packetNew(10))!=0){
+		packetAddChar(p, MSG_S_CLIENT_CONNECTED);
+		packetAddChar(p, 2);
+		packetAddChar(p, 3);
+		packetAddInt(p, c->id);
+		packetAddChar(p, 2);
+		packetAddShort(p, s->$clients);
+		packetSend(p, s->sock);
+		free(p);
+	}
 	return 0;
 }
 
 int serverClientsRemove(server *s, void *_c){
 	client *c=_c;
+	packet *p;
 	t_semSet(s->sem,0,-1);
 		bintreeDel(&s->clients, c->id, (void(*)(void*))clientClearServer);
 	s->$clients--;
 	t_semSet(s->sem,0,1);
+	if ((p=packetNew(10))!=0){
+		packetAddChar(p, MSG_S_CLIENT_DISCONNECTED);
+		packetAddChar(p, 1);
+		packetAddChar(p, 2);
+		packetAddShort(p, s->$clients);
+		packetSend(p, s->sock);
+		free(p);
+	}
 	return 0;
 }

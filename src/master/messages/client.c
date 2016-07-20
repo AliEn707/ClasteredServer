@@ -45,21 +45,21 @@ static void *message1(client*cl, packet* p){
 	char buf[100];
 	printf("client auth\n");
 	if (f){	
-		size=fread(&c,sizeof(c),1,f);//
+		size=fread(&c,1,sizeof(c),f);//
 //		printf("%d\n",c);
-		size=fread(&c,sizeof(c),1,f);
+		size=fread(&c,1,sizeof(c),f);
 //		printf("%d\n",c);
-		size=fread(&c,sizeof(c),1,f);
-		size=fread(&c,sizeof(c),1,f);
+		size=fread(&c,1,sizeof(c),f);
+		size=fread(&c,1,sizeof(c),f);
 //		printf("%d\n",c);
 		do{
 			if (c==1){
 				user_info u;
-				size=fread(&c,sizeof(c),1,f);
+				size=fread(&c,1,sizeof(c),f);
 				if (c==6){
 					size=fread(&s,1,sizeof(s),f);//size
 					for(size=s;size>0;){//must read full string
-						size-=fread(buf,1,s,f);//name, s elements of 1 byte
+						size-=fread(buf+(s-size),1,size,f);//name, s elements of 1 byte
 					}
 					buf[s]=0;
 					//find client by login
@@ -86,11 +86,13 @@ static void *message1(client*cl, packet* p){
 						break;
 					}
 				}
+				printf("Not correct message\n");
 			}else if(c==2){
 				size=fread(&c,sizeof(c),1,f);
+//				printf("%d\n",c);
 				if (c==6){
 					size=fread(&s,sizeof(s),1,f);//size
-					size=fread(buf,s,1,f);//hash
+					size=fread(buf,1,s,f);//hash
 					buf[s]=0;
 					char token[100];
 					char md5[20];
@@ -121,6 +123,7 @@ static void *message1(client*cl, packet* p){
 //			c->id=rand();//for tests
 //			c->server_id=serversGetIdAuto();//for tests
 			//////
+			printf("Drop client\n");
 			fclose(f);
 			return cl;
 		}while(0);
