@@ -7,6 +7,7 @@
 #include "../share/containers/bintree.h"
 #include "../share/containers/worklist.h"
 #include "../share/network/packet.h"
+#include "../share/system/types.h"
 #include "../share/system/log.h"
 #include "../share/crc32.h"
 
@@ -103,29 +104,23 @@ server *serversGet(int id){
 	return s;
 }
 
-typedef
-struct server_search_params{
-	int id;
-	int val;
-} server_search_params;
-
 static void* findAuto(bintree_key k, void *v, void *arg){
-	server_search_params *d=arg;
+	int2_t *d=arg;
 	server *s=v;
-	if (!s->broken && d->val>=s->$clients){
-		d->id=s->id;
-		d->val=s->$clients;
+	if (!s->broken && (d->i1==0 || d->i2>=s->$clients)){
+		d->i1=s->id;
+		d->i2=s->$clients;
 //		return &s->id;
 	}
 	return 0;
 }
 
 int serversGetIdAuto(){//TODO: change to find free
-	server_search_params d={0};
+	int2_t d={0,0};
 	t_semSet(sem,0,-1);
 		bintreeForEach(&servers, findAuto, &d);
 	t_semSet(sem,0,1);
-	return d.id;
+	return d.i1;
 }
 
 static void* setUncheck(bintree_key k, void *v, void *arg){

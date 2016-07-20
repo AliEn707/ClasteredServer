@@ -1,9 +1,7 @@
 #ifndef BYTES_ORDER_HEADER
 #define BYTES_ORDER_HEADER
 
-#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
-
-#define byteSwap(a) ({ typeof(a) out=a;\
+#define changeEndianes(a) ({ typeof(a) out=a;\
 	if (sizeof(a)==2){\
 		short val=*((short*)&(a));\
 		val=(val << 8) | ((val >> 8) & 0xFF);\
@@ -23,9 +21,18 @@
 out;})
 //TODO: change to faster version, and create test
 
+
+#if __BYTE_ORDER__ == __ORDER_BIG_ENDIAN__
+
+#define byteSwap(a) changeEndianes(a)
+#define toBigEndian(a) (a)
+#define toLittleEndian(a) changeEndianes(a)
+
 #else
 
 #define byteSwap(a) (a)
+#define toBigEndian(a) changeEndianes(a)
+#define toLittleEndian(a) (a)
 
 #endif
 
