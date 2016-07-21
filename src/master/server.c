@@ -4,6 +4,7 @@
 #include "server.h"
 #include "client.h"
 #include "messageprocessor.h"
+#include "workers/serverworkers.h"
 #include "../share/containers/bintree.h"
 #include "../share/containers/worklist.h"
 #include "../share/network/packet.h"
@@ -21,8 +22,15 @@
 
 typedef void*(*server_processor)(server*, packet*);
 
+static short servers_total=0;
 static bintree servers={0};
 static t_sem_t sem=0;
+
+static void* serversSendPacket(bintree_key k, void* v, void * p){
+	server* s=v;
+	packetSend(p, s->sock);
+	return 0;
+}
 
 void serversInit(){
 	memset(&servers, 0,sizeof(servers));
@@ -65,12 +73,12 @@ server *serverNew(char* host, short port){
 	return s;
 }
 
+//not used
 server* serverReconnect(server *s){
 	socketClear(s->sock);
 	if ((s->sock=socketConnect(s->host, s->port))==0){
 		return 0;
 	}
-	s->broken=0;
 	return s;
 }
 
@@ -86,7 +94,23 @@ void serverClear(server* s){
 }
 
 int serversAdd(server* s){
+	packet *p;
 	if (s->id!=0){
+		t_semSet(sem,0,-1);
+			servers_total++;
+		t_semSet(sem,0,1);
+		if ((p=packetNew(15))!=0){
+			packetInitFast(p);
+			packetAddChar(p, MSG_S_SERVER_CONNECTED);
+			packetAddChar(p, 2);
+			packetAddChar(p, 3);
+			packetAddInt(p, s->id);
+			packetAddChar(p, 2);
+			packetAddShort(p, serversTotal());
+			serversPacketSendAll(p);
+			free(p);
+		}
+		serverworkersAddWorkAuto(s);
 		t_semSet(sem,0,-1);
 			bintreeAdd(&servers, s->id, s);
 		t_semSet(sem,0,1);
@@ -98,23 +122,84 @@ server *serversGet(int id){
 	server *s;
 	t_semSet(sem,0,-1);
 		s=bintreeGet(&servers, id);
-	if (s!=0 && s->broken)
-		s=0;
 	t_semSet(sem,0,1);
 	return s;
+}
+
+void serversRemove(server* s){
+	int id=s->id;
+	packet *p;
+	t_semSet(sem,0,-1);
+		servers_total--;
+		bintreeDel(&servers, s->id, (void(*)(void*))serverClear);
+	t_semSet(sem,0,1);
+	if ((p=packetNew(15))!=0){
+		packetInitFast(p);
+		packetAddChar(p, MSG_S_SERVER_DISCONNECTED);
+		packetAddChar(p, 2);
+		packetAddChar(p, 3);
+		packetAddInt(p, id);
+		packetAddChar(p, 2);
+		packetAddShort(p, serversTotal());
+		serversPacketSendAll(p);
+		free(p);
+	}
+}
+
+static void* setUncheck(bintree_key k, void *v, void *arg){
+	server *s=v;
+	s->checked=0;
+	return 0;
+}
+static int checkSlaves(slave_info *si, void *arg){
+	int id=serverIdByAddress(si->host, si->port);
+	server *s=serversGet(id);
+	if (s==0){
+		if ((s=serverNew(si->host, si->port))!=0){
+			serversAdd(s);
+		}
+	}
+	if (s){
+		s->checked=1;
+		//add message server created
+	}
+	return 0;
+}
+static void* checkS(bintree_key k, void *v, void *arg){
+	server *s=v;
+	if (s->checked==0){
+		worklistAdd(arg, v);
+	}
+	return 0;
+}
+static void* checkR(void *v, void *arg){
+	server *s=v;
+	socketClose(s->sock);//it will be cleared lately
+	return v;
+}
+void serversCheck(){
+	worklist l;
+	memset(&l,0,sizeof(l));
+	t_semSet(sem,0,-1);
+		bintreeForEach(&servers, setUncheck, 0);
+	t_semSet(sem,0,1);
+	storageSlaves(checkSlaves, 0);
+	t_semSet(sem,0,-1);
+		bintreeForEach(&servers, checkS, &l);
+	t_semSet(sem,0,1);
+	worklistForEachRemove(&l, checkR, 0);
 }
 
 static void* findAuto(bintree_key k, void *v, void *arg){
 	int2_t *d=arg;
 	server *s=v;
-	if (!s->broken && (d->i1==0 || d->i2>=s->$clients)){
+	if (d->i1==0 || d->i2>=s->$clients){
 		d->i1=s->id;
 		d->i2=s->$clients;
 //		return &s->id;
 	}
 	return 0;
 }
-
 int serversGetIdAuto(){//TODO: change to find free
 	int2_t d={0,0};
 	t_semSet(sem,0,-1);
@@ -123,62 +208,23 @@ int serversGetIdAuto(){//TODO: change to find free
 	return d.i1;
 }
 
-static void* setUncheck(bintree_key k, void *v, void *arg){
-	server *s=v;
-	s->checked=0;
-	return 0;
-}
-
-static void* checkS(bintree_key k, void *v, void *arg){
-	server *s=v;
-	if (s->checked==0){
-		worklistAdd(arg, v);
-	}
-	return 0;
-}
-
-static int checkSlaves(slave_info *si,void *arg){
-	int id=serverIdByAddress(si->host, si->port);
-	server *s=bintreeGet(&servers, id);
-	if (s==0){
-		s=serverNew(si->host, si->port);
-		bintreeAdd(&servers, id, s);
-	}else{
-		if (s->broken)
-			serverReconnect(s);
-	}
-	if (s && !s->broken){
-		s->checked=1;
-		//add message server created
-	}
-	return 0;
-}
-
-static void* checkR(void *v, void *arg){
-	server *s=v;
-	serverClear(s);
-	//add move users
-	return v;
-}
-
-void serversCheck(){
-	worklist l;
-	memset(&l,0,sizeof(l));
+short serversTotal(){
+	short o;
 	t_semSet(sem,0,-1);
-		bintreeForEach(&servers, setUncheck, 0);
+		o=servers_total;
 	t_semSet(sem,0,1);
-	t_semSet(sem,0,-1);
-		storageSlaves(checkSlaves, 0);
-	t_semSet(sem,0,1);
-	t_semSet(sem,0,-1);
-		bintreeForEach(&servers, checkS, &l);
-	t_semSet(sem,0,1);
-	worklistForEachRemove(&l,checkR, 0);
+	return o;
 }
 
-void serversRemove(server* s){
+void serversTotalInc(){
 	t_semSet(sem,0,-1);
-		bintreeDel(&servers, s->id, (void(*)(void*))serverClear);
+		servers_total++;
+	t_semSet(sem,0,1);
+}
+
+void serversTotalDec(){
+	t_semSet(sem,0,-1);
+		servers_total--;
 	t_semSet(sem,0,1);
 }
 
@@ -203,7 +249,7 @@ void serverPacketProceed(server *s, packet *p){
 			if (s){
 				packetSend(p, s->sock);
 			}else if (_id==0){
-				serversPacketSendAll(s, p);
+				serversPacketSendAll(p);
 			}
 		}
 	}else{//proceed by self
@@ -217,13 +263,7 @@ int serverIdByAddress(char* address, short port){ //return 6 bytes integer
 	return crc32(str, strlen(str));
 }
 
-static void* serversSendPacket(bintree_key k, void* v, void * p){
-	server* s=v;
-	packetSend(p, s->sock);
-	return 0;
-}
-
-void serversPacketSendAll(server *s, packet* p){
+void serversPacketSendAll(packet* p){
 	t_semSet(sem,0,-1);
 		bintreeForEach(&servers, serversSendPacket, p);
 	t_semSet(sem,0,1);
@@ -255,7 +295,7 @@ int serverClientsRemove(server *s, void *_c){
 	packet *p;
 	t_semSet(s->sem,0,-1);
 		bintreeDel(&s->clients, c->id, (void(*)(void*))clientClearServer);
-	s->$clients--;
+		s->$clients--;
 	t_semSet(s->sem,0,1);
 	if ((p=packetNew(10))!=0){
 		packetAddChar(p, MSG_S_CLIENT_DISCONNECTED);
@@ -266,4 +306,15 @@ int serverClientsRemove(server *s, void *_c){
 		free(p);
 	}
 	return 0;
+}
+
+static void* serverClientsEraseEach(bintree_key k, void* v, void* arg){
+	clientClearServer(v);
+	return 0;
+}
+void serverClientsErase(server *s){
+	t_semSet(s->sem,0,-1);
+		bintreeForEach(&s->clients, serverClientsEraseEach,0);
+		s->$clients=0;
+	t_semSet(s->sem,0,1);
 }

@@ -162,3 +162,7 @@ socket_t* socketRecvCheck(socket_t *sock){
 		return sock;
 	return 0;
 }
+
+void socketClose(socket_t *s){
+	close(s->sockfd);
+}

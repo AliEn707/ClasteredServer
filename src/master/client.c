@@ -79,7 +79,8 @@ void clientClear(client* c){
 	t_semSet(c->sem,0,1);
 	worklistForEachRemove(&list, clientChatsRemoveList, c);
 	t_semSet(c->sem,0,-1);
-		socketClear(c->sock);
+		if (c->sock)
+			socketClear(c->sock);
 		worklistErase(&c->messages, (void(*)(void*))clientMessageClear);
 	t_semSet(c->sem,0,1);
 	t_semRemove(c->sem);
@@ -109,19 +110,17 @@ static void* checkC(bintree_key k, void *v, void *arg){
 	worklist *l=arg;
 	client *c=v;
 	if (c->broken || c->id==0)
-		if (abs(time(0)-c->timestamp)>10){//10 seconds for reconnect
+		if (abs(time(0)-c->timestamp)>=0){//add 10 seconds for reconnect
 			worklistAdd(l,c);
 		}
 	return 0;
 }
-
 static void* removeC(void *_c, void *arg){
 	client *c=_c;
 	printf("client %d removed\n", c->id);
 	bintreeDel(&clients, c->id, (void(*)(void*))clientClear);
 	return c;
 }
-
 void clientsCheck(){
 	worklist list;
 	memset(&list,0,sizeof(list));
@@ -153,8 +152,7 @@ int clientPacketProceed(client *c, packet *p){
 			if ((s=serversGet(id))!=0){
 				serverClientsAdd(s, c);
 			}else{
-				socketClear(c->sock);
-				c->sock=0;
+				socketClose(c->sock);
 				printf("client %d server %d error\n", c->id, c->server_id);
 				return 1;
 			}

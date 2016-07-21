@@ -59,9 +59,9 @@ int packetSend(packet *p, socket_t *sock){
 
 int packetReceive(packet* p, socket_t *sock){
 	socketSemRead(sock,-1);
-		p->$buf=socketRecvString(sock, p->buf);
+		p->$buf=socketRecvString(sock, p->buf)-sizeof(short);
 	socketSemRead(sock,1);
-	if (sock->decode)
+	if (p->$buf>0 && sock->decode)
 		sock->decode(p->buf,p->$buf,sock->_decode);
 	//TODO: add decoding
 	return p->$buf;

@@ -12,7 +12,6 @@
 typedef 
 struct {
 	int id;
-	short broken;
 	short checked;
 	socket_t *sock;
 	char host[100];
@@ -36,12 +35,16 @@ server *serversGet(int id);
 void serversRemove(server* s);
 void serversCheck();
 
+short serversTotal();
+void serversTotalInc();
+void serversTotalDec();
+
 //get id of less busy server
 int serversGetIdAuto();
 
 //processor for packet from server
 void serverPacketProceed(server* s, packet* p);
-void serversPacketSendAll(server *s, packet* p);
+void serversPacketSendAll(packet* p);
 
 //create uniq id by server address and port
 int serverIdByAddress(char* address, short port); 
@@ -49,5 +52,6 @@ int serverIdByAddress(char* address, short port);
 //
 int serverClientsAdd(server *s, void* c);
 int serverClientsRemove(server *s, void* c);
+void serverClientsErase(server *s);
 
 #endif

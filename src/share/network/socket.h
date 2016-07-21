@@ -66,4 +66,6 @@ int socketRecv(socket_t *sock, void *buf, int size);
 //check for socket data available
 socket_t* socketRecvCheck(socket_t *sock);
 
+void socketClose(socket_t *s);
+
 #endif

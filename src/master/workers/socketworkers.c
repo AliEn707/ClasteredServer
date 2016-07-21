@@ -71,8 +71,8 @@ static void* proceed(void *data, void *_w){
 				}
 				w->$works--;
 				c->broken=1;
-				socketClear(c->sock);
-				c->sock=0;
+				socketClear(c->sock);//check if need it
+				c->sock=0;//check if need it
 				printf("error with client\n");
 				return _w;
 			}while(0);

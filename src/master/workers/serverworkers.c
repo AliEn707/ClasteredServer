@@ -20,6 +20,7 @@
 static short total=0;
 static worker serverworkers[MAX_WORKERS];
 static serverworker_data data[MAX_WORKERS];
+
 static void init(void* _w){
 	worker* w=_w;
 	serverworker_data *wd=w->data;
@@ -44,10 +45,8 @@ static void* proceed(void *data,void *_w){
 				serverPacketProceed(s, &wd->packet);
 			}else{
 				w->$works--;
-				s->broken=1;
 				printf("Server %d connection lost\n", s->id);
-				//serversPacketSendAll();
-				//serversEach();
+				serversRemove(s);
 				return data;
 			}
 		}else
