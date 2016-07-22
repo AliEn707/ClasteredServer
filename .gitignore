@@ -5,3 +5,5 @@ test
 slave
 src/other/generator
 generator
+
+*.out

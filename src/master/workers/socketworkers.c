@@ -8,6 +8,7 @@
 #include "../../share/system/log.h"
 #include "../../share/system/types.h"
 #include "../client.h"
+#include "../server.h"
 
 /*
 ╔══════════════════════════════════════════════════════════════╗
@@ -29,7 +30,7 @@ static void init(void *_w){
 	wd->checks=10;
 	//add some actions for every work element
 	sprintf(w->name,"SocketWorker %d",w->id);
-	printLog("%s created\n",w->name);
+	printf("%s created\n",w->name);
 }
 
 static void loop(void *_w){
@@ -59,6 +60,7 @@ static void* proceed(void *data, void *_w){
 	worker* w=_w;
 	soketworker_data *wd=w->data;
 	client *c=data;
+	server *s;
 	int i;
 	clientMessagesProceed(c, clientMessageEach, &wd->packet);
 	for(i=0;i<wd->checks;i++){
@@ -72,6 +74,8 @@ static void* proceed(void *data, void *_w){
 				w->$works--;
 				c->broken=1;
 				socketClear(c->sock);//check if need it
+				if ((s=serversGet(c->server_id))!=0)
+					serverClientsRemove(s, c);
 				c->sock=0;//check if need it
 				printf("error with client\n");
 				return _w;
@@ -139,7 +143,7 @@ int socketworkersCreate(int num, int TPS){
 	total=num;
 	if (total>MAX_WORKERS){
 		total=MAX_WORKERS;
-		printLog("set num to %d\n",MAX_WORKERS);
+		printf("set num to %d\n",MAX_WORKERS);
 	}
 	for(i=0;i<total;i++){
 		socketworkers[i].id=i;

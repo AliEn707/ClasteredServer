@@ -7,7 +7,19 @@ struct bintree{
 	struct bintree * next[2];
 } bintree;
 
-typedef long long bintree_key;
+#define bintreeConvertKey(kin) ({\
+		union {typeof(kin) orig; bintree_key k;} $_$_$_$key;\
+		$_$_$_$key.orig=kin;\
+		$_$_$_$key.k;\
+	})
+
+#define bintreeUnconvertKey(kin) ({\
+		union {typeof(kin) k; bintree_key orig;} $_$_$_$key;\
+		$_$_$_$key.orig=kin;\
+		$_$_$_$key.k;\
+	})
+
+typedef unsigned long long bintree_key;
 
 bintree_key bintreeAdd(bintree* root, bintree_key key,void* data);
 

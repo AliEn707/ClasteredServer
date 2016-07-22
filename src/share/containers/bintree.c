@@ -55,7 +55,11 @@ bintree_key bintreeAdd(bintree* root, bintree_key key, void* data){
 void * bintreeGet(bintree* root, bintree_key key){
 	bintree* tmp=root;
 	int next;
+	printf("bntree get %lld\n", key);
+	if (key==0)
+		return 0;
 	while(key>0){
+		printf("get %lld, %d\n", key, next);
 		next=key&1;
 		if(tmp->next[next]==0)
 			return 0;
@@ -80,7 +84,7 @@ int _bintreeDel(bintree* root, bintree_key key, void (f)(void*v)){//TODO: remove
 	int next;
 	if (root==0)
 		return 0;
-//	printf("key %lld\n", key);
+	printf("key %lld\n", key);
 //	bits(key);
 	if (key==0){
 		if (f!=0)// && root->data)
@@ -89,13 +93,13 @@ int _bintreeDel(bintree* root, bintree_key key, void (f)(void*v)){//TODO: remove
 		root->data=0;
 		if (root->next[0]==0 && root->next[1]==0){
 			free(root);
-//			printf("free\n");
+			printf("free\n");
 			return 1;
 		}
 		return 0;
 	}
 	next=key&1;
-//	printf("take next as %d nextkey %lld\n", next, key>>1) ;
+	printf("take next as %d nextkey %lld\n", next, key>>1) ;
 	get=_bintreeDel(root->next[next],key>>1,f);
 //	free(root->next[next]);
 	if (get!=0){
@@ -113,6 +117,7 @@ int _bintreeDel(bintree* root, bintree_key key, void (f)(void*v)){//TODO: remove
 int bintreeDel(bintree* root, bintree_key key, void (f)(void*v)){
 	int get;
 	int next=key&1;
+	printf("bintree remove %lld, %d (%d)\n", key, next, root->next[next]);
 	get=_bintreeDel(root->next[next],key>>1,f);
 	if (get!=0)
 		root->next[next]=0;
@@ -211,16 +216,16 @@ bintree* bintreeClone(bintree * root){
 	return o;
 }
 
-/*
 void bits(bintree_key key){
 	printf("bits for %lld  ",key);
 	while(key){
-		printf("%lld", key&1);
+		printf("%lld\n", key&1);
 		key>>=1;
 	}
 	printf("\n");
 }
 
+/*
 int removeE(bintree_key k, void* v, void* a){
 	int o;
 	printf("remove key %lld value %lld\n",k,(long long)v);

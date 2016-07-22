@@ -41,20 +41,24 @@ int packetAddData(packet *p, void* data, int size){
 //send packet
 int packetSend(packet *p, socket_t *sock){
 	int o=0,_o;
-	if (p->$buf<=0)
+	if (sock){
+		if (p->$buf<=0)
+			return o;
+		//TODO:add encoding
+		if (sock->encode)
+			sock->encode(p->buf,p->$buf,sock->_encode);
+		socketSemWrite(sock,-1);
+			if ((o=socketSendNumber(sock, p->$buf))>0){
+				if((_o=socketSend(sock, p->buf, p->$buf))<=0)
+					o=_o;
+				else
+					o+=_o;
+			}
+		socketSemWrite(sock,1);
 		return o;
-	//TODO:add encoding
-	if (sock->encode)
-		sock->encode(p->buf,p->$buf,sock->_encode);
-	socketSemWrite(sock,-1);
-		if ((o=socketSendNumber(sock, p->$buf))>0){
-			if((_o=socketSend(sock, p->buf, p->$buf))<=0)
-				o=_o;
-			else
-				o+=_o;
-		}
-	socketSemWrite(sock,1);
-	return o;
+	}
+	perror("sock==0");
+	return 0;
 }
 
 int packetReceive(packet* p, socket_t *sock){

@@ -164,5 +164,8 @@ socket_t* socketRecvCheck(socket_t *sock){
 }
 
 void socketClose(socket_t *s){
-	close(s->sockfd);
+	if (s)
+		close(s->sockfd);
+	else
+		perror("sock==0");
 }

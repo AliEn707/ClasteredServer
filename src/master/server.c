@@ -70,6 +70,7 @@ server *serverNew(char* host, short port){
 	t_semSet(s->sem,0,1);
 	//TODO: add auth 
 	s->id=serverIdByAddress(host,port);
+	printf("server %d created\n", s->id);
 	return s;
 }
 
@@ -99,7 +100,7 @@ int serversAdd(server* s){
 		t_semSet(sem,0,-1);
 			servers_total++;
 		t_semSet(sem,0,1);
-		if ((p=packetNew(15))!=0){
+		if ((p=packetNew(100))!=0){
 			packetInitFast(p);
 			packetAddChar(p, MSG_S_SERVER_CONNECTED);
 			packetAddChar(p, 2);
@@ -107,6 +108,8 @@ int serversAdd(server* s){
 			packetAddInt(p, s->id);
 			packetAddChar(p, 2);
 			packetAddShort(p, serversTotal());
+			packetAddChar(p, 0);
+			packetAddInt(p, 0);
 			serversPacketSendAll(p);
 			free(p);
 		}
@@ -120,6 +123,7 @@ int serversAdd(server* s){
 
 server *serversGet(int id){
 	server *s;
+//	printf("get server %d\n", id);
 	t_semSet(sem,0,-1);
 		s=bintreeGet(&servers, id);
 	t_semSet(sem,0,1);
@@ -133,7 +137,8 @@ void serversRemove(server* s){
 		servers_total--;
 		bintreeDel(&servers, s->id, (void(*)(void*))serverClear);
 	t_semSet(sem,0,1);
-	if ((p=packetNew(15))!=0){
+	printf("removed server %d\n", id);
+	if ((p=packetNew(100))!=0){
 		packetInitFast(p);
 		packetAddChar(p, MSG_S_SERVER_DISCONNECTED);
 		packetAddChar(p, 2);
@@ -141,6 +146,8 @@ void serversRemove(server* s){
 		packetAddInt(p, id);
 		packetAddChar(p, 2);
 		packetAddShort(p, serversTotal());
+		packetAddChar(p, 0);
+		packetAddInt(p, 0);
 		serversPacketSendAll(p);
 		free(p);
 	}
@@ -154,6 +161,7 @@ static void* setUncheck(bintree_key k, void *v, void *arg){
 static int checkSlaves(slave_info *si, void *arg){
 	int id=serverIdByAddress(si->host, si->port);
 	server *s=serversGet(id);
+	printf("check server %d, got %d\n", id, s);
 	if (s==0){
 		if ((s=serverNew(si->host, si->port))!=0){
 			serversAdd(s);
@@ -277,13 +285,16 @@ int serverClientsAdd(server *s, void *_c){
 		bintreeAdd(&s->clients, c->id, c);
 		s->$clients++;
 	t_semSet(s->sem,0,1);
-	if ((p=packetNew(10))!=0){
+//	printf("added client %d to server %d\n",c->id, s->id);
+	if ((p=packetNew(100))!=0){
 		packetAddChar(p, MSG_S_CLIENT_CONNECTED);
 		packetAddChar(p, 2);
 		packetAddChar(p, 3);
 		packetAddInt(p, c->id);
 		packetAddChar(p, 2);
 		packetAddShort(p, s->$clients);
+		packetAddChar(p, 0);
+		packetAddInt(p, 0);
 		packetSend(p, s->sock);
 		free(p);
 	}
@@ -292,16 +303,22 @@ int serverClientsAdd(server *s, void *_c){
 
 int serverClientsRemove(server *s, void *_c){
 	client *c=_c;
+	int id=c->id;
 	packet *p;
 	t_semSet(s->sem,0,-1);
 		bintreeDel(&s->clients, c->id, (void(*)(void*))clientClearServer);
 		s->$clients--;
 	t_semSet(s->sem,0,1);
-	if ((p=packetNew(10))!=0){
+//	printf("removed client %d to server %d\n", id, s->id);
+	if ((p=packetNew(100))!=0){
 		packetAddChar(p, MSG_S_CLIENT_DISCONNECTED);
-		packetAddChar(p, 1);
+		packetAddChar(p, 2);
+		packetAddChar(p, 3);
+		packetAddInt(p, id);
 		packetAddChar(p, 2);
 		packetAddShort(p, s->$clients);
+		packetAddChar(p, 0);//must be here
+		packetAddInt(p, 0);//must be here
 		packetSend(p, s->sock);
 		free(p);
 	}

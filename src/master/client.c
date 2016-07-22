@@ -143,6 +143,7 @@ int clientPacketProceed(client *c, packet *p){
 	printf("got message %d\n", *buf);
 	if ((processor=messageprocessorClient(*buf))==0){
 //	if (*buf<0){//proxy
+//		printf("redirect message\n");
 		//add client data to the end
 		packetAddChar(p, MSG_CLIENT);
 		packetAddNumber(p, c->id);
