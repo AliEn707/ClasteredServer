@@ -94,6 +94,13 @@ int storageSlaves(int(*$)(slave_info*,void*arg),void*arg){
 	return 1;
 }
 
+int storageSlaveSetBroken(char *host, short port){
+	return 0;
+}
+
+int storageSlaveSetUnbroken(char *host, short port){
+	return 0;
+}
 
 int storageUsers(int(*$)(user_info*,void*arg),void*arg){
 	FILE *f=fopen(files.users,"rt");

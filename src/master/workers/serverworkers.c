@@ -5,6 +5,7 @@
 #include "serverworkers.h"
 #include "../../share/workers/workerbase.h"
 #include "../../share/system/log.h"
+#include "../storage.h"
 #include "../server.h"
 
 /*
@@ -46,6 +47,7 @@ static void* proceed(void *data,void *_w){
 			}else{
 				w->$works--;
 				printf("Server %d connection lost\n", s->id);
+				storageSlaveSetBroken(s->host, s->port);
 				serversRemove(s);
 				return data;
 			}

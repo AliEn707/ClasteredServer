@@ -59,7 +59,7 @@ void clientsCheck();
 int clientPacketProceed(client *c, packet* p);
 
 //work with client message queue
-void clientMessageAdd(client *c, client_message *m);
+void clientMessagesAdd(client *c, client_message *m);
 client_message* clientMessageNew(void* buf, short size);
 void clientMessageClear(client_message* m);
 
@@ -73,5 +73,22 @@ void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c), void * ar
 
 int clientSetInfo(client *c, user_info *u);
 
-void clientClearServer(client* c);
+void clientServerClear(client* c);
+
+#define clientCritical(_$_c, action)\
+	if(_$_c)\
+		t_semCritical(_$_c->sem, action)
+
+#define clientCriticalAuto(_$_c, action) ({\
+		typeof(action) _$_o=0;\
+		if (_$_c){\
+			t_semSet(_$_c->sem,0,-1);\
+				_$_o=(action);\
+			t_semSet(_$_c->sem,0,1);\
+		}\
+		_$_o;\
+	})
+
+#define clientCriticalInt(_$_c, action) if(_$_c) t_semCriticalInt(_$_c->sem, action)
+
 #endif

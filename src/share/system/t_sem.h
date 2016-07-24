@@ -52,5 +52,27 @@ t_sem_t t_semget(key_t key, int nsems, int semflg);
 int t_semctl(t_sem_t semid, int semnum, int cmd);
 #define t_semRemove(sem) t_semctl(sem,0,IPC_RMID)
 
+#define t_semCritical(sem, action)\
+	do{\
+		t_semSet(sem,0,-1);\
+			action;\
+		t_semSet(sem,0,1);\
+	}while(0)
+
+#define t_semCriticalAuto(sem, action) ({\
+		typeof(action) _$_o;\
+		t_semSet(sem,0,-1);\
+			_$_o=action;\
+		t_semSet(sem,0,1);\
+		_$_o;\
+	})
+
+#define t_semCriticalInt(sem, action) ({\
+		int _$_o;\
+		t_semSet(sem,0,-1);\
+			_$_o=action;\
+		t_semSet(sem,0,1);\
+		_$_o;\
+	})
 
 #endif

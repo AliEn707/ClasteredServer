@@ -113,12 +113,13 @@ int main(int argc,char* argv[]){
 	struct timeval tv={0,0};
 	struct sigaction sa;
 	struct {
+		time_t start;
 		time_t servers_check;
 	} timestamps={0};
+	
 	sigemptyset(&sa.sa_mask);
 	sa.sa_sigaction = default_sigaction;
 	sa.sa_flags   = SA_SIGINFO;
-
 	//sigaction(SIGSEGV, &sa, NULL);	
 	sigaction(SIGINT, &sa, NULL);	
 	sigaction(SIGTERM, &sa, NULL);	
@@ -156,33 +157,45 @@ int main(int argc,char* argv[]){
 	main_loop=1;
 //	printf("Start main loop\n");
 	time_t timestamp;
+	timestamps.start=time(0);
 	do{
 		timestamp=time(0);
 		timePassed(&tv); //start timer
 		//////test
 		
 		//////
-		if (timestamp-timestamps.servers_check>=5){
+		if (timestamp-timestamps.servers_check>5){
 			serversCheck();
 			timestamps.servers_check=timestamp;
 		}
 		clientsCheck();
 		chatsCheck();
 		syncTPS(timePassed(&tv),TPS);
+//		if (timestamp-timestamps.start>25){//debug feature
+//			main_loop=0;
+//		}
 	}while(main_loop);
 	//clearing
 	sleep(2);
 	//deadlock here??
 	socketworkersStopAll();
+//	printf("Ask to stop client workers\n");
 	serverworkersStopAll();
+//	printf("Ask to stop server workers\n");
 	listenworkersClose();
+//	printf("Ask to stop listen workers\n");
 	sleep(1);
 	messageprocessorClear();
 	listenersClear();
+	printf("Listeners cleared\n");
 	chatsClear();
+	printf("Chats cleared\n");
 	serversClear();
+	printf("Servers cleared\n");
 	clientsClear();
+	printf("Clients cleared\n");
 	storageClear();
+	printf("Storage cleared\n");
 	printf("Exiting\n");
 	sleep(1);
 	return 0;

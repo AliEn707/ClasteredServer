@@ -1,4 +1,4 @@
-#include <string.h>
+﻿#include <string.h>
 
 #include "client.h"
 #include "server.h"
@@ -31,7 +31,7 @@
 
 #define clientCheckAuth(c)\
 	if(c->id==0){\
-		c->broken=1;\
+		clientCritical(c,c->broken=1);\
 		printf("unauthorized client\n");\
 		return c;\
 	}\
@@ -64,6 +64,7 @@ static void *message1(client*cl, packet* p){
 					buf[s]=0;
 					//find client by login
 					if(storageUserByLogin(buf, &u)==0){//if we found user
+						client* _cl=0;
 						struct {
 							int $1;
 							long $2;
@@ -71,10 +72,20 @@ static void *message1(client*cl, packet* p){
 						char token[100];
 						clientSetInfo(cl, &u);
 						cl->conn_type=CLIENT_CONN_SOCKET;
+						fclose(f);
+						if((_cl=clientsGet(cl->id))!=0){
+							if (clientCriticalAuto(_cl, _cl->broken)){//TODO:add critical section
+								clientsRemove(_cl);
+							}else{
+								cl->id=0;
+								printf("User %s already signed in\n", cl->login);
+								//Add message already signed in
+								return cl;
+							}
+						}
 						clientsAdd(cl);
 						MD5_Create((void*)&tokenbase, sizeof(tokenbase), cl->token); //add normal token
 						s=base64_encode((void*)cl->token, (void*)token,16, 0);
-						fclose(f);
 						packetInitFast(p);
 						packetAddChar(p,MSG_C_AUTH_TOKEN);
 						packetAddChar(p,1);
@@ -82,7 +93,7 @@ static void *message1(client*cl, packet* p){
 	//					packetAddNumber(p,s);
 	//					packetAddData(p,token,s);
 						packetAddString(p,token);
-						clientMessageAdd(cl, clientMessageNew(packetGetData(p), packetGetSize(p)));
+						clientMessagesAdd(cl, clientMessageNew(packetGetData(p), packetGetSize(p)));
 						break;
 					}
 				}
@@ -112,7 +123,7 @@ static void *message1(client*cl, packet* p){
 						packetAddChar(p, 6);
 						packetAddString(p, cl->name);
 						//add other params
-						clientMessageAdd(cl, clientMessageNew(packetGetData(p), packetGetSize(p)));
+						clientMessagesAdd(cl, clientMessageNew(packetGetData(p), packetGetSize(p)));
 						printf("token OK\n");
 						break;
 					}

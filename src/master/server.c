@@ -26,12 +26,6 @@ static short servers_total=0;
 static bintree servers={0};
 static t_sem_t sem=0;
 
-static void* serversSendPacket(bintree_key k, void* v, void * p){
-	server* s=v;
-	packetSend(p, s->sock);
-	return 0;
-}
-
 void serversInit(){
 	memset(&servers, 0,sizeof(servers));
 	if ((sem=t_semGet(1))==0){
@@ -62,6 +56,7 @@ server *serverNew(char* host, short port){
 		serverClear(s);
 		return 0;
 	}
+	storageSlaveSetUnbroken(s->host, s->port);//maybe need not here
 	if ((s->sem=t_semGet(1))==0){
 		perror("t_semGet");
 		serverClear(s);
@@ -87,7 +82,7 @@ void serverClear(server* s){
 	if (s==0)
 		return;
 	t_semSet(s->sem,0,-1);
-		bintreeErase(&s->clients, (void(*)(void*))clientClearServer);
+		bintreeErase(&s->clients, (void(*)(void*))clientServerClear);
 	t_semSet(s->sem,0,1);
 	t_semRemove(s->sem);
 	socketClear(s->sock);
@@ -248,7 +243,7 @@ void serverPacketProceed(server *s, packet *p){
 		if (dir==MSG_CLIENT){ //redirect packet to client
 			client* c=0;
 			if (_id==0 || (c=clientsGet(_id))!=0){
-				clientMessageAdd(c, clientMessageNew(buf, size));
+				clientMessagesAdd(c, clientMessageNew(buf, size));
 			}
 		}else if (dir==MSG_SERVER){ //redirect packet to server
 			server* s=serversGet(_id);
@@ -271,6 +266,11 @@ int serverIdByAddress(char* address, short port){ //return 6 bytes integer
 	return crc32(str, strlen(str));
 }
 
+static void* serversSendPacket(bintree_key k, void* v, void * p){
+	server* s=v;
+	packetSend(p, s->sock);
+	return 0;
+}
 void serversPacketSendAll(packet* p){
 	t_semSet(sem,0,-1);
 		bintreeForEach(&servers, serversSendPacket, p);
@@ -306,7 +306,7 @@ int serverClientsRemove(server *s, void *_c){
 	int id=c->id;
 	packet *p;
 	t_semSet(s->sem,0,-1);
-		bintreeDel(&s->clients, c->id, (void(*)(void*))clientClearServer);
+		bintreeDel(&s->clients, c->id, (void(*)(void*))clientServerClear);
 		s->$clients--;
 	t_semSet(s->sem,0,1);
 //	printf("removed client %d to server %d\n", id, s->id);
@@ -326,7 +326,7 @@ int serverClientsRemove(server *s, void *_c){
 }
 
 static void* serverClientsEraseEach(bintree_key k, void* v, void* arg){
-	clientClearServer(v);
+	clientServerClear(v);
 	return 0;
 }
 void serverClientsErase(server *s){

@@ -72,11 +72,13 @@ static void* proceed(void *data, void *_w){
 						break;
 				}
 				w->$works--;
-				c->broken=1;
+				clientCritical(c, c->broken=1);
 				socketClear(c->sock);//check if need it
-				if ((s=serversGet(c->server_id))!=0)
+				if ((s=serversGet(clientCriticalAuto(c, c->server_id)))!=0)
 					serverClientsRemove(s, c);
-				c->sock=0;//check if need it
+				if (c->id==0)
+					clientClear(c);
+//				c->sock=0;//check if need it
 				printf("error with client\n");
 				return _w;
 			}while(0);

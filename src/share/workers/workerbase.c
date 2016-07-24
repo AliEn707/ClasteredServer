@@ -1,4 +1,4 @@
-#define _GNU_SOURCE
+﻿#define _GNU_SOURCE
 #include <stdlib.h>
 #include <stdio.h>
 #include <unistd.h>
@@ -37,9 +37,9 @@ static void * workerbaseThread(void * arg){
 	t_semSet(w->sem,0,1);
 	printLog("%s started\n",w->name);
 	
+	timePassed(&tv);
 	t_semSet(w->sem,0,-1);
 	while(w->run){
-		timePassed(&tv);
 		t_semSet(w->sem,0,1);
 		t_semSet(w->sem,0,-1);
 			if (w->paused){
@@ -67,8 +67,10 @@ static void * workerbaseThread(void * arg){
 				worklistForEachRemove(&w->works,*w->proceed,w);
 			t_semSet(w->sem,0,1);
 		}
-		if (!w->recheck)
+		if (!w->recheck){
 			syncTPS(timePassed(&tv),w->TPS);
+			timePassed(&tv);
+		}
 		w->recheck=0;
 		t_semSet(w->sem,0,-1);
 	}
@@ -76,10 +78,12 @@ static void * workerbaseThread(void * arg){
 	if (w->close)
 		out=w->close(w);
 	
+	t_semSet(w->sem,0,-1);
+		worklistErase(&w->works, 0);
+	t_semSet(w->sem,0,1);
 	t_semRemove(w->sem);
-	worklistErase(&w->works, 0);
 	printf("%s closed\n", w->name);
-	pthread_exit(out);
+//	pthread_exit(out);
 	return out;
 }
 

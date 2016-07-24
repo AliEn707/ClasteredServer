@@ -28,6 +28,8 @@ int storageInit();
 int storageClear();
 
 int storageSlaves(int(*f)(slave_info*,void*arg),void*arg);
+int storageSlaveSetBroken(char *host, short port);
+int storageSlaveSetUnbroken(char *host, short port);
 
 int storageUsers(int(*f)(user_info*,void*arg),void*arg);
 int storageUserById(int id, user_info* u);

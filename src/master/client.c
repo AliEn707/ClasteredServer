@@ -1,4 +1,4 @@
-#include <string.h>
+﻿#include <string.h>
 
 #include "client.h"
 #include "chat.h"
@@ -100,8 +100,8 @@ client* clientsGet(int id){
 	client *c;
 	t_semSet(sem,0,-1);
 		c=bintreeGet(&clients, id);
-if (c!=0 && c->broken)
-c=0;
+		if (c!=0 && c->broken)
+			c=0;
 	t_semSet(sem,0,1);
 	return c;
 }
@@ -109,7 +109,7 @@ c=0;
 static void* checkC(bintree_key k, void *v, void *arg){
 	worklist *l=arg;
 	client *c=v;
-	if (c->broken || c->id==0)
+	if (clientCriticalAuto(c, c->broken) || c->id==0)
 		if (abs(time(0)-c->timestamp)>=0){//add 10 seconds for reconnect
 			worklistAdd(l,c);
 		}
@@ -147,14 +147,14 @@ int clientPacketProceed(client *c, packet *p){
 		//add client data to the end
 		packetAddChar(p, MSG_CLIENT);
 		packetAddNumber(p, c->id);
-		server* s=serversGet(c->server_id);
+		server* s=serversGet(clientCriticalAuto(c, c->server_id));
 		if (s==0){
 			int id=serversGetIdAuto();
 			if ((s=serversGet(id))!=0){
 				serverClientsAdd(s, c);
 			}else{
 				socketClose(c->sock);
-				printf("client %d server %d error\n", c->id, c->server_id);
+				printf("client %d server %d error\n", c->id, clientCriticalAuto(c, c->server_id));
 				return 1;
 			}
 		}
@@ -177,7 +177,7 @@ static void* clientAddEach(bintree_key k,void *v,void *arg){
 	return 0;
 }
 
-void clientMessageAdd(client* c, client_message *m){
+void clientMessagesAdd(client* c, client_message *m){
 	if (m){
 		if (c){
 			m->num=1;
@@ -283,7 +283,11 @@ int clientSetInfo(client *c, user_info *u){
 	return 0;
 }
 
-void clientClearServer(client* c){
-	if (c)
-		c->server_id=0;
+void clientServerClear(client* c){
+	if (c){
+		t_semSet(c->sem,0,-1);
+			c->server_id=0;
+		t_semSet(c->sem,0,1);
+	}
 }
+
