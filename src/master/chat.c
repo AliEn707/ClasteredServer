@@ -6,22 +6,21 @@
 #include "../share/containers/worklist.h"
 
 static bintree chats={0};
-static t_sem_t sem=0;
+static t_mutex_t mutex=0;
 
 void chatsInit(){
 	memset(&chats, 0, sizeof(chats));
-	if ((sem=t_semGet(1))==0){
-		perror("t_semGet");
+	if ((mutex=t_mutexGet())==0){
+		perror("t_mutexGet");
 		return;
 	}
-	t_semSet(sem,0,1);
 }
 
 void chatsClear(){
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeErase(&chats, (void(*)(void*))chatClear);
-	t_semSet(sem,0,1);
-	t_semRemove(sem);
+	t_mutexUnlock(mutex);
+	t_mutexRemove(mutex);
 }
 
 chat* chatNew(){
@@ -31,12 +30,11 @@ chat* chatNew(){
 		return 0;
 	}
 	memset(c,0,sizeof(*c));
-	if ((c->sem=t_semGet(1))==0){
-		perror("t_semGet");
+	if ((c->mutex=t_mutexGet())==0){
+		perror("t_mutexGet");
 		chatClear(c);
 		return 0;
 	}
-	t_semSet(c->sem,0,1);
 	return c;
 }
 
@@ -59,30 +57,30 @@ void chatClear(chat* c){
 		return;
 	worklist list;
 	memset(&list,0,sizeof(list));
-	t_semSet(c->sem,0,-1);
+	t_mutexLock(c->mutex);
 		bintreeForEach(&c->clients, clearR, &list);
-	t_semSet(c->sem,0,1);
+	t_mutexUnlock(c->mutex);
 	worklistForEachRemove(&list, removeR, c);
-	t_semRemove(c->sem);
+	t_mutexRemove(c->mutex);
 	free(c);
 }
 
 void chatClientsAdd(chat* c, void* _client){
 	client* cl=_client;
-	t_semSet(c->sem, 0, -1);
+	t_mutexLock(c->mutex);
 	if (bintreeAdd(&c->clients, cl->id,  cl)){
-		t_semSet(c->sem,0,1);
+		t_mutexUnlock(c->mutex);
 		clientChatsAdd(cl, c);
 		return;
 	}
-	t_semSet(c->sem,0,1);
+	t_mutexUnlock(c->mutex);
 }
 
 void* chatClientsGet(chat* c, int id){
 	client* cl=0;
-	t_semSet(c->sem, 0, -1);
+	t_mutexLock(c->mutex);
 		cl=bintreeGet(&c->clients, id);
-	t_semSet(c->sem,0,1);
+	t_mutexUnlock(c->mutex);
 	return cl;
 }
 
@@ -94,26 +92,26 @@ void chatClientsRemove(chat* c, void* _client){
 	void chatClientsRemoveClient(void* data){
 		found=data;
 	}
-	t_semSet(c->sem, 0, -1);
+	t_mutexLock(c->mutex);
 		bintreeDel(&c->clients, cl->id,  chatClientsRemoveClient);//check for deadlock
-	t_semSet(c->sem,0,1);
+	t_mutexUnlock(c->mutex);
 	clientChatsRemove(found, c);
 }
 
 int chatsAdd(chat* c){
 	if (c && c->id!=0){
-		t_semSet(sem,0,-1);
+		t_mutexLock(mutex);
 			bintreeAdd(&chats, c->id, c);
-		t_semSet(sem,0,1);
+		t_mutexUnlock(mutex);
 	}
 	return c->id;
 }
 
 chat* chatsGet(int id){
 	chat *c;
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		c=bintreeGet(&chats, id);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	return c;
 }
 
@@ -129,25 +127,25 @@ static void* checkC(bintree_key k, void *v, void *arg){
 static void* removeC(void *_c, void *arg){
 	chat *c=_c;
 	printf("chat %d removed\n", c->id);
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeDel(&chats, c->id, (void(*)(void*))chatClear);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	return c;
 }
 
 void chatsCheck(){
 	worklist list;
 	memset(&list,0,sizeof(list));
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeForEach(&chats, checkC, &list);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	worklistForEachRemove(&list, removeC, 0);
 }
 
 void chatsRemove(chat* c){
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeDel(&chats, c->id, (void(*)(void*))chatClear);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 }
 
 

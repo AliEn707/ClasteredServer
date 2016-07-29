@@ -43,16 +43,16 @@ static void* clientMessageEach(void* d, void * _arg){
 	voidp2_t *arg=_arg;
 	client *c=arg->p1;
 	packet *p=arg->p2;
-	t_semSet(m->sem,0,-1);
+	t_mutexLock(m->mutex);
 	if (m->ready){
-		t_semSet(m->sem,0,1);
+		t_mutexUnlock(m->mutex);
 		packetInitFast(p);
 		packetAddData(p,m->data,m->$data);
 		packetSend(p,c->sock);
 		clientMessageClear(m);
 		return d;
 	}
-	t_semSet(m->sem,0,1);
+	t_mutexUnlock(m->mutex);
 	return 0;
 }
 

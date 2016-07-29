@@ -1,7 +1,7 @@
 #ifndef WORKERBASE_HEADER
 #define WORKERBASE_HEADER
 
-#include "../system/t_sem.h"
+#include "../system/t_mutex.h"
 #include "../containers/worklist.h"
 
 typedef
@@ -19,7 +19,7 @@ struct worker{
 	int $works;
 	//inner vars
 	worklist works;
-	t_sem_t sem;
+	t_mutex_t mutex;
 	//functions
 	void* (*proceed)(void*data,void*); //must clear data before nonzero return
 	void (*loop)(void*);

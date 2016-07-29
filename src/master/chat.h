@@ -4,13 +4,13 @@
 #include "client.h"
 #include "../share/containers/bintree.h"
 #include "../share/containers/worklist.h"
-#include "../share/system/t_sem.h"
+#include "../share/system/t_mutex.h"
 
 typedef 
 struct chat{
 	int id;
 	bintree clients;
-	t_sem_t sem;
+	t_mutex_t mutex;
 	worklist history;
 } chat;
 

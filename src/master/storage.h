@@ -3,13 +3,13 @@
 
 
 typedef
-struct {
+struct slave_info{
 	char host[40];
 	short port;
 } slave_info;
 
 typedef
-struct {
+struct user_info{
 	int id;
 	char login[40];
 	char name[40];
@@ -17,17 +17,17 @@ struct {
 } user_info;
 
 typedef
-struct {
+struct storage_config{
 	char file[100];
 } storage_config;
 
-
+//provided by main
 storage_config* mainStorageConfig();
 
 int storageInit();
 int storageClear();
 
-int storageSlaves(int(*f)(slave_info*,void*arg),void*arg);
+int storageSlaves(int(*f)(slave_info*,void*arg), void*arg);
 int storageSlaveSetBroken(char *host, short port);
 int storageSlaveSetUnbroken(char *host, short port);
 

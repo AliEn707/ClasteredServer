@@ -29,7 +29,7 @@
 static short total=0;
 static worker listenworkers[MAX_WORKERS];
 static listenworker_data data[MAX_WORKERS];
-static t_sem_t sem;
+static t_mutex_t mutex;
 
 static void init(void* _w){
 	worker* w=_w;
@@ -65,13 +65,13 @@ static void loop(void* _w){
 	socket_t *sock=0;
 	struct timeval t={0, 80000};
 	//packetInit(&wd->packet);
-	//printf("1\t%d\n", w->sem->val);
+	//printf("1\t%d\n", w->mutex->val);
 	//add some actions for every iteration
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		if(select(wd->maxfd+1, &wd->set, 0, 0, &t)>0){
 			sock=worklistForEachReturn(&w->works,check,_w);
 		}
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	if (sock){
 		printf("%s: client connected\n", w->name);
 		do {
@@ -194,8 +194,8 @@ int listenworkersCreate(int num, int TPS){
 	int i;
 	memset(listenworkers, 0, sizeof(listenworkers));
 	total=num;
-	sem=t_semGet(1);
-	t_semSet(sem,0,1);
+	mutex=t_mutexGet();
+	t_mutexUnlock(mutex);
 	if (total>MAX_WORKERS){
 		total=MAX_WORKERS;
 		printLog("set num to %d\n",MAX_WORKERS);
@@ -215,5 +215,5 @@ int listenworkersCreate(int num, int TPS){
 
 void listenworkersClose(){
 	listenworkersStopAll();
-	t_semRemove(sem);
+	t_mutexRemove(mutex);
 }

@@ -19,7 +19,7 @@ while (connection = server.accept)
 					p packet.parse
 				end
 				if(Time.now.to_i%2==0 && false)
-					packet.init.set_type(1).add_int(0).set_dest(0,0).send(conn)
+					packet.init.set_type(1).add_int(2).add_string("test")
 				end#        line = conn.readline
 	#        line = conn.read
 	#        puts "#{client} says: #{line}"

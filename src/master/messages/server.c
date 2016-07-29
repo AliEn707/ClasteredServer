@@ -1,4 +1,4 @@
-#include <stdio.h>
+﻿#include <stdio.h>
 #include <string.h>
 
 #include "server.h"
@@ -12,7 +12,7 @@
 
 /*
 ╔══════════════════════════════════════════════════════════════╗
-║ 	servr messages processors 			                       ║
+║ 	server messages processors 			                       ║
 ║ created by Dennis Yarikov						                       ║
 ║ jun 2016									                       ║
 ╚══════════════════════════════════════════════════════════════╝
@@ -70,6 +70,8 @@ static void *message1(server *sv, packet *p){
 				packetAddChar(p, 3);//int
 				packetAddNumber(p, id);//int
 				storageAttributesForEach(id, keys, $keys, addAttrToPacket, p);
+				packetAddChar(p, 0);//int
+				packetAddInt(p, 0);//int
 				packetSend(p, sv->sock);
 				
 				for(i=0;i<$keys;i++){
@@ -115,8 +117,38 @@ static void *message2(server *sv, packet *p){
 	return 0;
 }
 
-voidMessageProcessor(3)
-voidMessageProcessor(4)
+static void* addServerIdToPacket(bintree_key k, void* v, void * p){
+	packetAddChar(p, 3);
+	packetAddInt(p, k);
+	return 0;
+}
+///info about servers {2,0,0,0}
+static void *message3(server *sv, packet *p){
+	packetInitFast(p);
+	packetAddChar(p, MSG_S_SERVERS_INFO);
+	packetAddChar(p, -1);
+	serversForEach(addServerIdToPacket, p);
+	packetAddChar(p, 0);
+	packetAddInt(p, 0);
+	packetSend(p, sv->sock);
+	return 0;
+}
+
+///move client to anther server {3,1,3,int,3,int,0,0}
+static void *message4(server *sv, packet *p){
+	client *c;
+	server *s;
+	char*buf=packetGetData(p);
+	int id=*((int*)(buf+3));
+	if ((c=serverClientsGet(sv, id))!=0){
+		if((s=serversGet(*((int*)(buf+8))))!=0){
+			serverClientsRemove(sv, c);//func will send message
+			serverClientsAdd(s, c);//func will send message
+		}
+	}
+	return 0;
+}
+
 voidMessageProcessor(5)
 voidMessageProcessor(6)
 voidMessageProcessor(7)

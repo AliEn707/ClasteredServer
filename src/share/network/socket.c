@@ -13,7 +13,7 @@
 
 #include "socket.h"
 #include "bytes_order.h"
-#include "../system/t_sem.h"
+#include "../system/t_mutex.h"
 #include "../system/log.h"
 
 /*
@@ -33,18 +33,16 @@ socket_t *socketNew(int sockfd){
 	}	
 	memset(sock,0,sizeof(*sock));
 	sock->sockfd=sockfd;
-	if ((sock->sem.read=t_semGet(1))==0){
-		perror("malloc sem.read");
+	if ((sock->mutex.read=t_mutexGet())==0){
+		perror("malloc mutex.read");
 		socketClear(sock);
 		return 0;
 	}
-	t_semSet(sock->sem.read, 0, 1);
-	if ((sock->sem.write=t_semGet(1))==0){
-		perror("malloc sem.write");
+	if ((sock->mutex.write=t_mutexGet())==0){
+		perror("malloc mutex.write");
 		socketClear(sock);
 		return 0;
 	}
-	t_semSet(sock->sem.write, 0, 1);
 	return sock;
 }
 
@@ -52,8 +50,8 @@ int socketClear(socket_t *sock){
 	if (sock==0)
 		return 0;
 	close(sock->sockfd);
-	t_semRemove(sock->sem.read);
-	t_semRemove(sock->sem.write);
+	t_mutexRemove(sock->mutex.read);
+	t_mutexRemove(sock->mutex.write);
 	free(sock);
 	return 0;
 }
@@ -90,11 +88,17 @@ socket_t *socketConnect(char *host, int port){
 
 
 void socketSemWrite(socket_t* sock, int act){
-	t_semSet(sock->sem.write, 0, act);
+	if (act==-1)
+		t_mutexLock(sock->mutex.write);
+	else
+		t_mutexUnlock(sock->mutex.write);
 }
 
 void socketSemRead(socket_t* sock, int act){
-	t_semSet(sock->sem.read, 0, act);
+	if (act==-1)
+		t_mutexLock(sock->mutex.read);
+	else
+		t_mutexUnlock(sock->mutex.read);
 }
 
 int socketSend(socket_t *sock, void * buf, int size){

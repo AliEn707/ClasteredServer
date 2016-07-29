@@ -16,7 +16,7 @@ struct {
 	socket_t *sock;
 	char host[100];
 	short port;
-	t_sem_t sem;
+	t_mutex_t mutex;
 	bintree clients;
 	int $clients;
 } server;
@@ -34,6 +34,7 @@ int serversAdd(server* s);
 server *serversGet(int id);
 void serversRemove(server* s);
 void serversCheck();
+void serversForEach(void*(*f)(bintree_key k, void *v, void *arg), void *a);
 
 short serversTotal();
 void serversTotalInc();
@@ -51,6 +52,7 @@ int serverIdByAddress(char* address, short port);
 
 //
 int serverClientsAdd(server *s, void* c);
+void* serverClientsGet(server *s, int id);
 int serverClientsRemove(server *s, void* c);
 void serverClientsErase(server *s);
 

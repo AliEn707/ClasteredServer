@@ -24,22 +24,23 @@ typedef void*(*server_processor)(server*, packet*);
 
 static short servers_total=0;
 static bintree servers={0};
-static t_sem_t sem=0;
+static t_mutex_t mutex=0;
+
+static void* serversSendPacket(bintree_key k, void* v, void * p);
 
 void serversInit(){
 	memset(&servers, 0,sizeof(servers));
-	if ((sem=t_semGet(1))==0){
-		perror("t_semGet");
+	if ((mutex=t_mutexGet())==0){
+		perror("t_mutexGet");
 		return;
 	}
-	t_semSet(sem,0,1);
 }
 
 void serversClear(){
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeErase(&servers, (void(*)(void*))serverClear);
-	t_semSet(sem,0,1);
-	t_semRemove(sem);
+	t_mutexUnlock(mutex);
+	t_mutexRemove(mutex);
 }
 
 server *serverNew(char* host, short port){
@@ -57,12 +58,11 @@ server *serverNew(char* host, short port){
 		return 0;
 	}
 	storageSlaveSetUnbroken(s->host, s->port);//maybe need not here
-	if ((s->sem=t_semGet(1))==0){
-		perror("t_semGet");
+	if ((s->mutex=t_mutexGet())==0){
+		perror("t_mutexGet");
 		serverClear(s);
 		return 0;
 	}
-	t_semSet(s->sem,0,1);
 	//TODO: add auth 
 	s->id=serverIdByAddress(host,port);
 	printf("server %d created\n", s->id);
@@ -81,10 +81,12 @@ server* serverReconnect(server *s){
 void serverClear(server* s){
 	if (s==0)
 		return;
-	t_semSet(s->sem,0,-1);
-		bintreeErase(&s->clients, (void(*)(void*))clientServerClear);
-	t_semSet(s->sem,0,1);
-	t_semRemove(s->sem);
+	if (s->mutex){
+		t_mutexLock(s->mutex);
+			bintreeErase(&s->clients, (void(*)(void*))clientServerClear);
+		t_mutexUnlock(s->mutex);
+		t_mutexRemove(s->mutex);
+	}
 	socketClear(s->sock);
 	free(s);
 }
@@ -92,26 +94,25 @@ void serverClear(server* s){
 int serversAdd(server* s){
 	packet *p;
 	if (s->id!=0){
-		t_semSet(sem,0,-1);
+		t_mutexLock(mutex);
 			servers_total++;
-		t_semSet(sem,0,1);
-		if ((p=packetNew(100))!=0){
-			packetInitFast(p);
-			packetAddChar(p, MSG_S_SERVER_CONNECTED);
-			packetAddChar(p, 2);
-			packetAddChar(p, 3);
-			packetAddInt(p, s->id);
-			packetAddChar(p, 2);
-			packetAddShort(p, serversTotal());
-			packetAddChar(p, 0);
-			packetAddInt(p, 0);
-			serversPacketSendAll(p);
-			free(p);
-		}
-		serverworkersAddWorkAuto(s);
-		t_semSet(sem,0,-1);
 			bintreeAdd(&servers, s->id, s);
-		t_semSet(sem,0,1);
+			if ((p=packetNew(100))!=0){
+				packetInitFast(p);
+				packetAddChar(p, MSG_S_SERVER_CONNECTED);
+				packetAddChar(p, 2);
+				packetAddChar(p, 3);
+				packetAddInt(p, s->id);
+				packetAddChar(p, 2);
+				packetAddShort(p, servers_total);
+				packetAddChar(p, 0);
+				packetAddInt(p, 0);
+				///send packet
+				bintreeForEach(&servers, serversSendPacket, p);
+				free(p);
+			}
+		t_mutexUnlock(mutex);
+		serverworkersAddWorkAuto(s);			
 	}
 	return s->id;
 }
@@ -119,19 +120,19 @@ int serversAdd(server* s){
 server *serversGet(int id){
 	server *s;
 //	printf("get server %d\n", id);
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		s=bintreeGet(&servers, id);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	return s;
 }
 
 void serversRemove(server* s){
 	int id=s->id;
 	packet *p;
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		servers_total--;
 		bintreeDel(&servers, s->id, (void(*)(void*))serverClear);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	printf("removed server %d\n", id);
 	if ((p=packetNew(100))!=0){
 		packetInitFast(p);
@@ -160,6 +161,7 @@ static int checkSlaves(slave_info *si, void *arg){
 	if (s==0){
 		if ((s=serverNew(si->host, si->port))!=0){
 			serversAdd(s);
+			//fist message to serer is server_connected 
 		}
 	}
 	if (s){
@@ -183,14 +185,21 @@ static void* checkR(void *v, void *arg){
 void serversCheck(){
 	worklist l;
 	memset(&l,0,sizeof(l));
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeForEach(&servers, setUncheck, 0);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	storageSlaves(checkSlaves, 0);
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeForEach(&servers, checkS, &l);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	worklistForEachRemove(&l, checkR, 0);
+}
+
+void serversForEach(void*(*f)(bintree_key k, void *v, void *arg), void* a){
+	t_mutexLock(mutex);
+		bintreeForEach(&servers, f, a);
+	t_mutexUnlock(mutex);
+
 }
 
 static void* findAuto(bintree_key k, void *v, void *arg){
@@ -203,32 +212,32 @@ static void* findAuto(bintree_key k, void *v, void *arg){
 	}
 	return 0;
 }
-int serversGetIdAuto(){//TODO: change to find free
+int serversGetIdAuto(){
 	int2_t d={0,0};
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeForEach(&servers, findAuto, &d);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	return d.i1;
 }
 
 short serversTotal(){
 	short o;
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		o=servers_total;
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	return o;
 }
 
 void serversTotalInc(){
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		servers_total++;
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 }
 
 void serversTotalDec(){
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		servers_total--;
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 }
 
 void serverPacketProceed(server *s, packet *p){
@@ -272,19 +281,19 @@ static void* serversSendPacket(bintree_key k, void* v, void * p){
 	return 0;
 }
 void serversPacketSendAll(packet* p){
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeForEach(&servers, serversSendPacket, p);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 }
 
 int serverClientsAdd(server *s, void *_c){
 	client *c=_c;
 	packet *p;
 	c->server_id=s->id;
-	t_semSet(s->sem,0,-1);
+	t_mutexLock(s->mutex);
 		bintreeAdd(&s->clients, c->id, c);
 		s->$clients++;
-	t_semSet(s->sem,0,1);
+	t_mutexUnlock(s->mutex);
 //	printf("added client %d to server %d\n",c->id, s->id);
 	if ((p=packetNew(100))!=0){
 		packetAddChar(p, MSG_S_CLIENT_CONNECTED);
@@ -301,14 +310,22 @@ int serverClientsAdd(server *s, void *_c){
 	return 0;
 }
 
+void* serverClientsGet(server *s, int id){
+	void* c;
+	t_mutexLock(s->mutex);
+		c=bintreeGet(&s->clients, id);
+	t_mutexUnlock(s->mutex);
+	return c;
+}
+
 int serverClientsRemove(server *s, void *_c){
 	client *c=_c;
 	int id=c->id;
 	packet *p;
-	t_semSet(s->sem,0,-1);
+	t_mutexLock(s->mutex);
 		bintreeDel(&s->clients, c->id, (void(*)(void*))clientServerClear);
 		s->$clients--;
-	t_semSet(s->sem,0,1);
+	t_mutexUnlock(s->mutex);
 //	printf("removed client %d to server %d\n", id, s->id);
 	if ((p=packetNew(100))!=0){
 		packetAddChar(p, MSG_S_CLIENT_DISCONNECTED);
@@ -330,8 +347,8 @@ static void* serverClientsEraseEach(bintree_key k, void* v, void* arg){
 	return 0;
 }
 void serverClientsErase(server *s){
-	t_semSet(s->sem,0,-1);
+	t_mutexLock(s->mutex);
 		bintreeForEach(&s->clients, serverClientsEraseEach,0);
 		s->$clients=0;
-	t_semSet(s->sem,0,1);
+	t_mutexUnlock(s->mutex);
 }

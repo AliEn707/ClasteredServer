@@ -171,11 +171,6 @@ voidMessageProcessor(22)
 voidMessageProcessor(23)
 voidMessageProcessor(24)
 voidMessageProcessor(25)
-voidMessageProcessor(26)
-voidMessageProcessor(27)
-voidMessageProcessor(28)
-voidMessageProcessor(29)
-voidMessageProcessor(30)
 
 void clientMessageProcessorInit(){
 	clientMessageProcessor(1);
@@ -203,9 +198,4 @@ void clientMessageProcessorInit(){
 	clientMessageProcessor(23);
 	clientMessageProcessor(24);
 	clientMessageProcessor(25);
-	clientMessageProcessor(26);
-	clientMessageProcessor(27);
-	clientMessageProcessor(28);
-	clientMessageProcessor(29);
-	clientMessageProcessor(30);
 }

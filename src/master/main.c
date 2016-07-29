@@ -129,7 +129,8 @@ int main(int argc,char* argv[]){
 	memset(&config,0,sizeof(config));
 	config.serverworkers.tps=1;
 	config.socketworkers.tps=1;
-
+	config.log.debug=1;
+	
 	listenersInit();
 	clientsInit();
 	serversInit();

@@ -1,7 +1,7 @@
 #ifndef SOCKET_HEADER
 #define SOCKET_HEADER
 
-#include "../system/t_sem.h"
+#include "../system/t_mutex.h"
 #include "bytes_order.h"
 
 
@@ -9,9 +9,9 @@ typedef
 struct {
 	int sockfd;
 	struct{
-		t_sem_t write;
-		t_sem_t read;
-	}sem;
+		t_mutex_t write;
+		t_mutex_t read;
+	}mutex;
 	void (*encode)(void*buf,short,void*arg);
 	void *_encode;
 	void (*decode)(void*buf,short,void*arg);

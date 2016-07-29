@@ -28,12 +28,14 @@ attr2s
 -----------
 level ->
 	select level from users where user.id=?
-hero>level -> 
+->level=1
+
+hero.level -> 
 	select level from heros 
 		join users on heros.id=users.hero_id where users.id=?
 -> level=1
 
-hero<>helm[].id -> 
+hero>helm[].id -> 
 	select id from helms h 
 		join helms_users hu on h.id=hu.helm_id 
 		join users u on hu.user_id=u.id where users.id=?
@@ -44,7 +46,7 @@ hero<helm[].id ->
 		join users u on h.user_id=u.id where users.id=?
 -> hero.helm[1].id=1, hero.helm[2].id=2, ...
 
-hero<>helm[1].id -> 
+hero>helm[1].id -> 
 	select id from helms h 
 		join helms_users hu on h.id=hu.helm_id 
 		join users u on hu.user_id=u.id where users.id=? and h.id in (1)

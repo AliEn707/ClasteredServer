@@ -24,22 +24,21 @@
 typedef void*(*client_processor)(client*, packet*);
 
 static bintree clients={0};
-static t_sem_t sem=0;
+static t_mutex_t mutex=0;
 
 void clientsInit(){
 	memset(&clients, 0, sizeof(clients));
-	if ((sem=t_semGet(1))==0){
-		perror("t_semGet");
+	if ((mutex=t_mutexGet())==0){
+		perror("t_mutexGet");
 		return;
 	}
-	t_semSet(sem,0,1);
 }
 
 void clientsClear(){
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeErase(&clients, (void(*)(void*))clientClear);
-	t_semSet(sem,0,1);
-	t_semRemove(sem);
+	t_mutexUnlock(mutex);
+	t_mutexRemove(mutex);
 }
 
 client* clientNew(socket_t *sock){
@@ -50,12 +49,11 @@ client* clientNew(socket_t *sock){
 	}
 	memset(c,0,sizeof(*c));
 	c->sock=sock;
-	if ((c->sem=t_semGet(1))==0){
-		perror("t_semGet");
+	if ((c->mutex=t_mutexGet())==0){
+		perror("t_mutexGet");
 		clientClear(c);
 		return 0;
 	}
-	t_semSet(c->sem,0,1);
 	return c;
 }
 
@@ -74,35 +72,35 @@ void clientClear(client* c){
 		return;
 	worklist list;
 	memset(&list, 0, sizeof(list));
-	t_semSet(c->sem,0,-1);
+	t_mutexLock(c->mutex);
 		bintreeForEach(&c->chats, clientChatsRemoveEach, &list);//check for deadlock
-	t_semSet(c->sem,0,1);
+	t_mutexUnlock(c->mutex);
 	worklistForEachRemove(&list, clientChatsRemoveList, c);
-	t_semSet(c->sem,0,-1);
+	t_mutexLock(c->mutex);
 		if (c->sock)
 			socketClear(c->sock);
 		worklistErase(&c->messages, (void(*)(void*))clientMessageClear);
-	t_semSet(c->sem,0,1);
-	t_semRemove(c->sem);
+	t_mutexUnlock(c->mutex);
+	t_mutexRemove(c->mutex);
 	free(c);
 }
 
 int clientsAdd(client* c){
 	if (c->id!=0){
-		t_semSet(sem,0,-1);
+		t_mutexLock(mutex);
 			bintreeAdd(&clients, c->id, c);
-		t_semSet(sem,0,1);
+		t_mutexUnlock(mutex);
 	}
 	return c->id;
 }
 
 client* clientsGet(int id){
 	client *c;
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		c=bintreeGet(&clients, id);
 		if (c!=0 && c->broken)
 			c=0;
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 	return c;
 }
 
@@ -124,16 +122,16 @@ static void* removeC(void *_c, void *arg){
 void clientsCheck(){
 	worklist list;
 	memset(&list,0,sizeof(list));
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeForEach(&clients, checkC, &list);
 		worklistForEachRemove(&list, removeC, 0);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 }
 
 void clientsRemove(client* c){
-	t_semSet(sem,0,-1);
+	t_mutexLock(mutex);
 		bintreeDel(&clients, c->id, (void(*)(void*))clientClear);
-	t_semSet(sem,0,1);
+	t_mutexUnlock(mutex);
 }
 
 int clientPacketProceed(client *c, packet *p){
@@ -168,12 +166,12 @@ int clientPacketProceed(client *c, packet *p){
 static void* clientAddEach(bintree_key k,void *v,void *arg){
 	client *c=v;
 	client_message *m=arg;
-	t_semSet(c->sem,0,-1);
+	t_mutexLock(c->mutex);
 		worklistAdd(&c->messages, m);
-	t_semSet(c->sem,0,1);
-	t_semSet(m->sem, 0,-1);
+	t_mutexLock(c->mutex);
+	t_mutexLock(m->mutex);
 		m->num++;
-	t_semSet(m->sem, 0,1);
+	t_mutexLock(m->mutex);
 	return 0;
 }
 
@@ -182,18 +180,18 @@ void clientMessagesAdd(client* c, client_message *m){
 		if (c){
 			m->num=1;
 			m->ready=1;
-			t_semSet(c->sem,0,-1);
+			t_mutexLock(c->mutex);
 				worklistAdd(&c->messages, m);
-			t_semSet(c->sem,0,1);
+			t_mutexUnlock(c->mutex);
 			//find client and add
 		}else{
 			//add to all, and then
-			t_semSet(sem,0,-1);
+			t_mutexLock(mutex);
 				bintreeForEach(&clients, clientAddEach, m);
-			t_semSet(sem,0,1);
-			t_semSet(m->sem, 0,-1);
+			t_mutexUnlock(mutex);
+			t_mutexLock(m->mutex);
 				m->ready=1;
-			t_semSet(m->sem, 0,1);
+			t_mutexUnlock(m->mutex);
 		}
 	}
 }
@@ -213,22 +211,21 @@ client_message* clientMessageNew(void* buf, short size){
 	}
 	memcpy(m->data, buf, m->$data);
 	m->data[m->$data]=0;
-	if ((m->sem=t_semGet(1))==0){
+	if ((m->mutex=t_mutexGet())==0){
 		free(m->data);
 		free(m);
 		return 0;
 	}
-	t_semSet(m->sem,0,1);
 	//packetAddData(&m->packet,buf,size);
 	return m;
 }
 
 void clientMessageClear(client_message* m){
-	t_semSet(m->sem,0,-1);
+	t_mutexLock(m->mutex);
 		m->num--;
-	t_semSet(m->sem,0,1);
+	t_mutexUnlock(m->mutex);
 	if (m->num==0){	
-		t_semRemove(m->sem);
+		t_mutexRemove(m->mutex);
 		free(m->data);
 		free(m);
 	}
@@ -236,20 +233,20 @@ void clientMessageClear(client_message* m){
 
 void clientChatsAdd(client* cl, void* _c){
 	chat *c=_c;
-	t_semSet(cl->sem,0,-1);
+	t_mutexLock(cl->mutex);
 	if (bintreeAdd(&cl->chats, c->id, c)){
-		t_semSet(cl->sem,0,1);
+		t_mutexUnlock(cl->mutex);
 		chatClientsAdd(c, cl);
 		return;
 	}
-	t_semSet(cl->sem,0,1);
+	t_mutexUnlock(cl->mutex);
 }
 
 void* clientChatsGet(client* cl, int id){
 	chat *c=0;
-	t_semSet(cl->sem,0,-1);
+	t_mutexLock(cl->mutex);
 		c=bintreeGet(&cl->chats, id);
-	t_semSet(cl->sem,0,1);
+	t_mutexUnlock(cl->mutex);
 	return c;
 }
 
@@ -261,17 +258,17 @@ void clientChatsRemove(client* cl, void* _c){
 	void clientChatsRemoveChat(void* data){
 		found=data;
 	}
-	t_semSet(cl->sem,0,-1);
+	t_mutexLock(cl->mutex);
 		bintreeDel(&cl->chats, c->id, clientChatsRemoveChat);//check for deadlock
-	t_semSet(cl->sem,0,1);
+	t_mutexUnlock(cl->mutex);
 	chatClientsRemove(found, cl);
 }
 
 void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c), void *a){
 	voidp2_t arg={c, a};
-	t_semSet(c->sem,0,-1);
+	t_mutexLock(c->mutex);
 		worklistForEachRemove(&c->messages, me, &arg);
-	t_semSet(c->sem,0,1);
+	t_mutexUnlock(c->mutex);
 }
 
 int clientSetInfo(client *c, user_info *u){
@@ -285,9 +282,9 @@ int clientSetInfo(client *c, user_info *u){
 
 void clientServerClear(client* c){
 	if (c){
-		t_semSet(c->sem,0,-1);
+		t_mutexLock(c->mutex);
 			c->server_id=0;
-		t_semSet(c->sem,0,1);
+		t_mutexUnlock(c->mutex);
 	}
 }
 

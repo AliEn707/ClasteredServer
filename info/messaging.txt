@@ -1,6 +1,5 @@
 [clients]
-auth client
-monitore client connection
++auth client
 //chat
 find or create chat and join
 get chat history
@@ -10,12 +9,12 @@ leave chat
 
 
 [servers]
-monitore servers
-server to client messages
-server to server messages
-get client attribute (by id)
-set client attribute (by id)
-move client to another server (owned client)
-attribute(s) of client connected to server (id)
-connection to server astablished
-connection to server lost
++server to client messages
++server to server messages
++get client attribute (by id)
++set client attribute (by id)
++move client to another server (owned client)
++connection to server astablished
++connection to server lost
++client connected to server
++client disconnected from server

@@ -7,7 +7,7 @@
 #include "chat.h"
 #include "../share/containers/worklist.h"
 #include "../share/containers/bintree.h"
-#include "../share/system/t_sem.h"
+#include "../share/system/t_mutex.h"
 #include "../share/network/socket.h"
 #include "../share/network/packet.h"
 
@@ -25,7 +25,7 @@ struct {
 	short broken;
 	short server_id;
 	socket_t *sock;
-	t_sem_t sem;
+	t_mutex_t mutex;
 	worklist messages;
 	bintree chats;
 	time_t timestamp;
@@ -37,7 +37,7 @@ struct client{
 //	packet packet;
 	char * data;
 	short $data;
-	t_sem_t sem;
+	t_mutex_t mutex;
 	int num;
 	short ready;
 } client_message;
@@ -77,18 +77,16 @@ void clientServerClear(client* c);
 
 #define clientCritical(_$_c, action)\
 	if(_$_c)\
-		t_semCritical(_$_c->sem, action)
+		t_mutexCritical(_$_c->mutex, action)
 
 #define clientCriticalAuto(_$_c, action) ({\
 		typeof(action) _$_o=0;\
 		if (_$_c){\
-			t_semSet(_$_c->sem,0,-1);\
+			t_mutexLock(_$_c->mutex);\
 				_$_o=(action);\
-			t_semSet(_$_c->sem,0,1);\
+			t_mutexUnlock(_$_c->mutex);\
 		}\
 		_$_o;\
 	})
-
-#define clientCriticalInt(_$_c, action) if(_$_c) t_semCriticalInt(_$_c->sem, action)
 
 #endif
