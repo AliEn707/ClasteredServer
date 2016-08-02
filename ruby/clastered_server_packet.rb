@@ -1,5 +1,5 @@
 require 'stringio'
-class ClasteredServer
+module ClasteredServer
 	class Packet
 
 		def initialize(type=nil)

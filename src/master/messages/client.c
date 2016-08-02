@@ -87,9 +87,8 @@ static void *message1(client*cl, packet* p){
 						MD5_Create((void*)&tokenbase, sizeof(tokenbase), cl->token); //add normal token
 						s=base64_encode((void*)cl->token, (void*)token,16, 0);
 						packetInitFast(p);
-						packetAddChar(p,MSG_C_AUTH_TOKEN);
-						packetAddChar(p,1);
-						packetAddChar(p,6);
+						packetAddNumber(p,(char)MSG_C_AUTH_TOKEN);
+						packetAddNumber(p,(char)1);
 	//					packetAddNumber(p,s);
 	//					packetAddData(p,token,s);
 						packetAddString(p,token);
@@ -116,11 +115,9 @@ static void *message1(client*cl, packet* p){
 						//auth ok
 						fclose(f);
 						packetInit(p);
-						packetAddChar(p, MSG_C_USER_INFO);
-						packetAddChar(p, 2);
-						packetAddChar(p, 3);
-						packetAddNumber(p, cl->id);
-						packetAddChar(p, 6);
+						packetAddNumber(p, (char)MSG_C_USER_INFO);
+						packetAddNumber(p, (char)2);
+						packetAddInt(p, cl->id);
 						packetAddString(p, cl->name);
 						//add other params
 						clientMessagesAdd(cl, clientMessageNew(packetGetData(p), packetGetSize(p)));

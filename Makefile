@@ -1,11 +1,14 @@
 GCC ?= gcc
 CFLAGS= -Wall -fsigned-char -fgnu89-inline 
-LDFLAGS= -pthread -lpthread -lm
+CPPFLAGS= -Wall -fsigned-char 
+LDFLAGS= -pthread -lpthread -lm -lstdc++
 SRC=src
 SHARE_SOURCES:=$(wildcard $(SRC)/share/*.c) $(wildcard $(SRC)/share/*/*.c) $(wildcard $(SRC)/share/*/*/*.c)
 SHARE_OBJECTS:=$(SHARE_SOURCES:.c=.o)
 
-DEFINES:= -DSTORAGE_TEXT
+STORGE?=TEXT
+
+DEFINES:= -DSTORAGE_$STORGE
 
 PUBLIC:=master
 PUBLIC_SOURCES=$(wildcard $(SRC)/$(PUBLIC)/*.c) $(wildcard $(SRC)/$(PUBLIC)/*/*.c) $(wildcard $(SRC)/$(PUBLIC)/*/*/*.c)
@@ -17,10 +20,12 @@ TEST_OBJECTS=$(TEST_SOURCES:.c=.o)
 
 ifeq ($(DEBUG),1)
     CFLAGS +=-g -ggdb
+    CPPFLAGS +=-g -ggdb
 endif
 
 ifeq ($(OPTIMISATION),1)
     CFLAGS +=-O3 -ffast-math -fgcse-sm -fgcse-las -fgcse-after-reload -flto
+    CPPFLAGS +=-O3 -ffast-math -fgcse-sm -fgcse-las -fgcse-after-reload -flto
 endif
 
 all: $(SHARE_SOURCES) $(PUBLIC_SOURCES) $(PUBLIC)

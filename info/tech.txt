@@ -13,53 +13,6 @@ bintree | key attribute_name int (4 chars)
 	
 //may be used cashing with crc32 of full name of attribute as key
 
-[attributes]
-//attribute name
-attr1>attr2>attr3
-{text}
-string in attributes/#user# file
-{sql}
-users
-	attr1_id ->
-attr1s
-	attr2_id ->
-attr2s
-	attr3
------------
-level ->
-	select level from users where user.id=?
-->level=1
-
-hero.level -> 
-	select level from heros 
-		join users on heros.id=users.hero_id where users.id=?
--> level=1
-
-hero>helm[].id -> 
-	select id from helms h 
-		join helms_users hu on h.id=hu.helm_id 
-		join users u on hu.user_id=u.id where users.id=?
--> hero.helm[1].id=1, hero.helm[2].id=2, ...
-
-hero<helm[].id -> 
-	select id from helms h 
-		join users u on h.user_id=u.id where users.id=?
--> hero.helm[1].id=1, hero.helm[2].id=2, ...
-
-hero>helm[1].id -> 
-	select id from helms h 
-		join helms_users hu on h.id=hu.helm_id 
-		join users u on hu.user_id=u.id where users.id=? and h.id in (1)
--> hero.helm[1].id
-
-.helm[1,2].id -> 
-	select id from helms h where h.id in (1,2)
--> .helm[1].id=1, .helm[1].id=2
-
-.helm[1]>userhelm(!).id -> 
-	select id from userhelm uh 
-		join helms h on uh.user_id=? where helms.id in (1)
-	
 [servers]
 client has one server
 server has many clients
@@ -68,3 +21,44 @@ server stores client pointers (bintree)
 
 //client attachet to server on connection
 //rooms are implemented on slave servers
+
+
+[attributes]
+///
+	
+.attr // attr of object
+>obj //obj user links to
+<obj[] //objs linked to user
+|obj[] //objs linket to user via join table (for sql)
+
+query started from .><| searched from user object 
+query must ends with .attr
+in [] can be placed indexes devided by ',' [1,2,3]
+
+.name -> user name
+>hero.health -> health of hero object belonged by user
+<item[].id -> ids of items belong to user
+|weapon[].id -> ids of items belong to user
+>hero|weapons[].attack -> attack of weapons belong to hero belonged by user
+
+//  >hero<item[1,2,3].price
+{
+	char* attr; //="user"
+	char type; //=0
+	char ids; //= "0"
+}
+{
+	char* attr; //="hero"
+	char type; //='>'
+	char ids; //= "0"
+}
+{
+	char* attr; //="item"
+	char type; //='<'
+	char ids; //="1,2,3"
+}
+{
+	char* attr; //="price"
+	char type; //='.'
+	char ids; //=""
+}

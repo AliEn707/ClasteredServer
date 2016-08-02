@@ -13,6 +13,7 @@ typedef
 struct {
 	int id;
 	short checked;
+	short ready;
 	socket_t *sock;
 	char host[100];
 	short port;

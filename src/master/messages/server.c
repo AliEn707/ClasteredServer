@@ -28,9 +28,7 @@
 
 //functions to proceed messages from slave servers, named messageN where N is message type, messages without processors will be sent to client
 static void* addAttrToPacket(char* k, char* v, void * p){
-	packetAddChar(p, 6);
 	packetAddString(p,k);
-	packetAddChar(p, 6);
 	packetAddString(p,v);
 	return 0;
 }
@@ -65,13 +63,12 @@ static void *message1(server *sv, packet *p){
 				}
 				fclose(f);
 				packetInitFast(p);
-				packetAddChar(p, MSG_S_CLIENT_ATTRIBUTES);
-				packetAddChar(p, $keys*2+1);
-				packetAddChar(p, 3);//int
-				packetAddNumber(p, id);//int
+				packetAddNumber(p, (char)MSG_S_CLIENT_ATTRIBUTES);
+				packetAddNumber(p, (char)($keys*2+1));
+				packetAddInt(p, id);//int
 				storageAttributesForEach(id, keys, $keys, addAttrToPacket, p);
-				packetAddChar(p, 0);//int
-				packetAddInt(p, 0);//int
+				packetAddNumber(p, (char)0);
+				packetAddNumber(p, (int)0);//int
 				packetSend(p, sv->sock);
 				
 				for(i=0;i<$keys;i++){
@@ -118,23 +115,22 @@ static void *message2(server *sv, packet *p){
 }
 
 static void* addServerIdToPacket(bintree_key k, void* v, void * p){
-	packetAddChar(p, 3);
 	packetAddInt(p, k);
 	return 0;
 }
 ///info about servers {2,0,0,0}
 static void *message3(server *sv, packet *p){
 	packetInitFast(p);
-	packetAddChar(p, MSG_S_SERVERS_INFO);
-	packetAddChar(p, -1);
+	packetAddNumber(p, (char)MSG_S_SERVERS_INFO);
+	packetAddNumber(p, (char)-1);
 	serversForEach(addServerIdToPacket, p);
-	packetAddChar(p, 0);
-	packetAddInt(p, 0);
+	packetAddNumber(p, (char)0);
+	packetAddNumber(p, (int)0);
 	packetSend(p, sv->sock);
 	return 0;
 }
 
-///move client to anther server {3,1,3,int,3,int,0,0}
+///move client to anther server {3,2,3,int,3,int,0,0}
 static void *message4(server *sv, packet *p){
 	client *c;
 	server *s;
@@ -149,7 +145,16 @@ static void *message4(server *sv, packet *p){
 	return 0;
 }
 
-voidMessageProcessor(5)
+//i'm ready {4,1,3,id,0,0}
+static void *message4(server *sv, packet *p){
+	server *s;
+	char*buf=packetGetData(p);
+	int id=*((int*)(buf+3));
+	if (id==sv->id)
+		serverSetReady(sv);
+	return 0;
+}
+
 voidMessageProcessor(6)
 voidMessageProcessor(7)
 voidMessageProcessor(8)

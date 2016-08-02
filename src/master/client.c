@@ -143,7 +143,7 @@ int clientPacketProceed(client *c, packet *p){
 //	if (*buf<0){//proxy
 //		printf("redirect message\n");
 		//add client data to the end
-		packetAddChar(p, MSG_CLIENT);
+		packetAddNumber(p, (char)MSG_CLIENT);
 		packetAddNumber(p, c->id);
 		server* s=serversGet(clientCriticalAuto(c, c->server_id));
 		if (s==0){

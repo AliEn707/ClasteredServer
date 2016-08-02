@@ -29,34 +29,41 @@ int packetAddData(packet *p, void* data, int size);
 	})
 
 //specific functions for using numbers directly
+//(char[]){1}
 #define packetAddChar(pack, data) ({\
 		char $=data;\
+		packetAddData(pack, (char[]){1}, sizeof(char));\
 		packetAddData(pack, &$, sizeof($));\
 	})
 
 #define packetAddShort(pack, data) ({\
 		short $=data;$=byteSwap($);\
+		packetAddData(pack, (char[]){2}, sizeof(char));\
 		packetAddData(pack, &$, sizeof($));\
 	})
 
 #define packetAddInt(pack, data) ({\
 		int $=data;$=byteSwap($);\
+		packetAddData(pack, (char[]){3}, sizeof(char));\
 		packetAddData(pack, &$, sizeof($));\
 	})
 
 #define packetAddFloat(pack, data) ({\
 		float $=data;$=byteSwap($);\
+		packetAddData(pack, (char[]){4}, sizeof(char));\
 		packetAddData(pack, &$, sizeof($));\
 	})
 
 #define packetAddDouble(pack, data) ({\
 		double $=data;$=byteSwap($);\
+		packetAddData(pack, (char[]){5}, sizeof(char));\
 		packetAddData(pack, &$, sizeof($));\
 	})
 
 #define packetAddString(pack, data) ({\
 		short $data=strlen(data);\
 		short _data=byteSwap($data);\
+		packetAddData(pack, (char[]){6}, sizeof(char));\
 		packetAddData(pack,&_data,sizeof($data)) +\
 		packetAddData(pack,data,$data);\
 	})
