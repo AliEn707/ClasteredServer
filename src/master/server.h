@@ -57,4 +57,5 @@ void* serverClientsGet(server *s, int id);
 int serverClientsRemove(server *s, void* c);
 void serverClientsErase(server *s);
 
+void serverSetReady(server *s);
 #endif

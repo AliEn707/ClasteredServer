@@ -1,5 +1,8 @@
 #ifndef LOG_HEADER
 #define LOG_HEADER
+
+#include <stdio.h>
+
 typedef
 struct {
 	char file[200];

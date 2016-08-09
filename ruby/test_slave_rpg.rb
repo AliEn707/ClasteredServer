@@ -1,133 +1,119 @@
 require 'socket'
 require 'io/wait'
 require_relative "clastered_server_packet"
+require_relative "clastered_server_grid"
 
-class Area
-	def initialize(c, size, index, scale=1)
-		p @counts=c
-		@size=size
-		@scale=scale
-		@index=index
-		@l,@t=@size/@counts[0]*(index% @counts[0]),@size/@counts[1]*((index) / @counts[0]) #@r>@l
-		@r,@b=@l+@size/@counts[0],@t+@size/@counts[1] #@b>@t
-		p "#{@index},( #{@l},#{@t}), #{@r},#{@b}"
+class Npc
+	attr_accessor :bot, :keys, :client_id
+	attr_reader :id, :position
+	def initialize(id)
+		@id=id
+		@world_size=[600,600]
+		@dir=[0,0]
+		@goal=[0,0]
+		@position=[0,0]
+		@vel=1
 	end
 	
-	def check?(x,y)
-		@l<=x && @r>x && @t<=y && @b>y
-	end
-	
-	def shares(x,y)
-		o=[]
-		ix,iy=@index% @counts[0],@index/ @counts[0]
-		shift=1*@scale
-		if check?(x,y) 
-			if @l<=x && x<=@l+shift
-				x1=ix-1
-				y1=iy
-				o<<((x1)*@counts[0]+y1) if x1>=0 && x1<@counts[0] && y1>=0 && y1<@counts[1]
-			end
-			if @r>x && x>=@r-shift 
-				x1=ix+1
-				y1=iy
-				o<<((x1)*@counts[0]+y1) if x1>=0 && x1<@counts[0] && y1>=0 && y1<@counts[1]
-			end
-			if @t<=y && y<=@t+shift 
-				x1=ix
-				y1=iy-1
-				o<<((x1)*@counts[0]+y1) if x1>=0 && x1<@counts[0] && y1>=0 && y1<@counts[1]
-			end
-			if @b>y && y>=@b-shift
-				x1=ix
-				y1=iy+1
-				o<<((x1)*@counts[0]+y1) if x1>=0 && x1<@counts[0] && y1>=0 && y1<@counts[1]
+	def move(x,y)
+		@position[0]+=x
+		@position[1]+=y
+		if @bot
+			if (@position[0]-@goal[0])**2+(@position[1]-@goal[1])**2<=2*@vel
+				@goal=[rand*@world_size[0], rand*@world_size[1]]
+				set_dir(@goal[0]-@position[0], @goal[1]-@position[1])
 			end
 		end
-		return o
-	end
-end
-
-class Grid
-	def initialize(size, scale=1)
-		@size=size
-		@scale=scale
-		@grid=[]
-		@server_ids=[]
 	end
 	
-	def set_servers(a)
-		@server_ids=a.uniq.sort
-		@servers=@server_ids.each_with_index.inject({}){|o, z|
-			id, i=z
-			o.merge!(id => {id: id, index: i})
-		}
-		set_parting
-		return self
+	def walk
+		move(@dir[0]*@vel, @dir[1]*@vel)
 	end
 	
-	def check_owner(x,y)
-		@grid[to_grid(x,y)][:owner]
+	def set_dir(x=nil,y=nil)
+		@dir[0]=x||@keys[3]-@keys[2]
+		@dir[1]=y||@keys[1]-@keys[0]
+		normalize_dir
 	end
 
-	def check_shares(x,y)
-		@grid[to_grid(x,y)][:shares]
-	end
 
 	private
-	def to_grid(x,y)
-		x.to_i.round*@size+y.to_i
+	
+	def normalize_dir
+		if (l=Math.sqrt(@dir[0]*@dir[0]+@dir[1]*@dir[1]))!=0
+			@dir[0]/=l
+			@dir[1]/=l
+		end
 	end
-
-	def set_parting
-		@counts=[(0..Math.sqrt(@server_ids.size).round).inject{|o,i| (i if @server_ids.size.to_f/i==(@server_ids.size/i).to_i)||o}]
-		@counts<<@server_ids.size/@counts[0]
-		@servers.each{|k,v|
-			p v[:area]=Area.new(@counts, @size, v[:index])
-		}
-		@grid=[]
-		@size.times{|x|
-			@size.times{|y|
-				index=to_grid(x,y)
-				@grid[index]={}
-				@servers.each{|k, s|
-					if s[:area].check?(x,y)
-						@grid[index][:owner]=s[:id]
-						@grid[index][:shares]=s[:area].shares(x,y).map!{|e| @server_ids[e]}
-					end
-				}
-			}
-		}
-	end	
 end
 
-grid =Grid.new(10)
-grid.set_servers([1,2,3,4,5])
 
-5.times{|x|
-	y=x
-	p "#{x},#{y},#{grid.check(x,y)}"
-}
-qq
+def time_diff(start, finish)
+   (finish - start)
+end
 
 server = TCPServer.new(12345)
- 
-packet=ClasteredServerPacket.new
+npcs={}
+connection=nil
+lat=1.0/30
+id=0
 
+Thread.new{
+	packet=ClasteredServer::Packet.new
+	loop{
+		t=Time.now
+		npcs.each{|k,v|
+			v.walk
+			packet.init.set_type(40).add_int(v.id).add_float(v.position[0]).add_float(v.position[1]).set_dest(1,v.client_id)
+			packet.send(connection)
+		}if connection && id!=0
+		dif=time_diff(t,Time.now)
+		sleep(lat-dif) if (lat-dif>0)
+	}
+}
+
+puts "wait for connections"
 while (connection = server.accept)
+	puts "connected"
 	Thread.new(connection) do |conn|
 		port, host = conn.peeraddr[1,2]
 		client = "#{host}:#{port}"
 		puts "#{client} is connected"
 		begin
+			packet=ClasteredServer::Packet.new
+			packet.init
+			packet.recv(conn, true)
+			p a=packet.parse
+			if a[0]==2 #client connected
+				id=a[2]
+			end
+			puts "server id #{id}"
+			packet.init.set_type(5).add_int(id).set_dest(0,0).send(connection)
+			puts "ready"
 			loop do
 				if (conn.ready?)
 					packet.init
 					packet.recv(conn, true)
-					p packet.parse
+					p a=packet.parse
+					case a[0]
+						when 5 #client connected
+							puts "connected client #{a[2]}"
+							npcs[a[2]]=Npc.new(a[2])
+							npcs[a[2]].client_id=a[2]
+						when 6 #client disconnected
+							puts "disconnected client #{a[2]}"
+							npcs.delete[a[2]]
+						when 40
+							cl=npc[packet.dest[1]]
+							if cl
+								cl.keys[a[2]]=a[3]
+								cl.set_dir
+								#do some stuff
+							end
+						else
+							puts "unknown packet"
+					end
 				end
-				if(Time.now.to_i%2==0 && false)
-					packet.init.set_type(1).add_int(2).add_string("test")
-				end#        line = conn.readline
 	#        line = conn.read
 	#        puts "#{client} says: #{line}"
 	#        conn.write(line)
@@ -137,6 +123,9 @@ while (connection = server.accept)
 			p e
 			conn.close
 			puts "#{client} has disconnected"
+		rescue Exception => e
+			puts e
+			puts e.backtrace
 		end
 	end
 end

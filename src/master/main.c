@@ -5,6 +5,10 @@
 #include <signal.h>
 #include <unistd.h>
 
+#ifndef __CYGWIN__
+#include <execinfo.h>
+#endif
+
 #include "main.h"
 #include "chat.h"
 #include "client.h"
@@ -97,6 +101,23 @@ static void default_sigaction(int signal, siginfo_t *si, void *arg){
 	main_loop=0;
 }
 
+static void segfault_sigaction(int sig){
+	printf("Cought segfault, exiting\n");
+#ifndef __CYGWIN__
+	void *array[20];
+	size_t size;
+
+	// get void*'s for all entries on the stack
+	size = backtrace(array, 20);
+
+	// print out all the frames to stderr
+	fprintf(stderr, "Error: signal %d:\n", sig);
+	backtrace_symbols_fd(array, size, STDERR_FILENO);
+#endif
+	main_loop=0;
+	exit(1);
+}
+
 static void* proceedListener(listener *l, void *arg){
 //	printf("added listener %d to listen workers\n", l->sockfd);
 	listenworkersAddWorkAll(l);
@@ -123,6 +144,8 @@ int main(int argc,char* argv[]){
 	//sigaction(SIGSEGV, &sa, NULL);	
 	sigaction(SIGINT, &sa, NULL);	
 	sigaction(SIGTERM, &sa, NULL);	
+	
+	signal(SIGSEGV, segfault_sigaction);
 	
 	srand(time(0));
 	

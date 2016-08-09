@@ -4,6 +4,8 @@
 #include <pthread.h>
 #include <stdlib.h>
 
+#include "../system/log.h"
+
 
 typedef pthread_mutex_t *t_mutex_t;
 
@@ -18,7 +20,7 @@ void t_mutexRemove(t_mutex_t mutex);
 	do{\
 		t_mutexLock(mutex);\
 			action;\
-		t_mutexLock(mutex);\
+		t_mutexUnlock(mutex);\
 	}while(0)
 
 #define t_mutexCriticalAuto(mutex, action) ({\

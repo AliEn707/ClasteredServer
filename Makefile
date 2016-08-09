@@ -6,9 +6,9 @@ SRC=src
 SHARE_SOURCES:=$(wildcard $(SRC)/share/*.c) $(wildcard $(SRC)/share/*/*.c) $(wildcard $(SRC)/share/*/*/*.c)
 SHARE_OBJECTS:=$(SHARE_SOURCES:.c=.o)
 
-STORGE?=TEXT
+STORAGE?=TEXT
 
-DEFINES:= -DSTORAGE_$STORGE
+DEFINES:= -DSTORAGE_$(STORAGE)
 
 PUBLIC:=master
 PUBLIC_SOURCES=$(wildcard $(SRC)/$(PUBLIC)/*.c) $(wildcard $(SRC)/$(PUBLIC)/*/*.c) $(wildcard $(SRC)/$(PUBLIC)/*/*/*.c)
@@ -19,13 +19,13 @@ TEST_SOURCES=$(wildcard $(SRC)/$(TEST)/*.c) $(wildcard $(SRC)/$(TEST)/*/*.c) $(w
 TEST_OBJECTS=$(TEST_SOURCES:.c=.o)
 
 ifeq ($(DEBUG),1)
-    CFLAGS +=-g -ggdb
-    CPPFLAGS +=-g -ggdb
+    CFLAGS +=-g1 -ggdb 
+    CPPFLAGS +=-g1 -ggdb
 endif
 
 ifeq ($(OPTIMISATION),1)
-    CFLAGS +=-O3 -ffast-math -fgcse-sm -fgcse-las -fgcse-after-reload -flto
-    CPPFLAGS +=-O3 -ffast-math -fgcse-sm -fgcse-las -fgcse-after-reload -flto
+    CFLAGS +=-O3 -ffast-math -fgcse-sm -fgcse-las -fgcse-after-reload -flto -funroll-loops
+    CPPFLAGS +=-O3 -ffast-math -fgcse-sm -fgcse-las -fgcse-after-reload -flto -funroll-loops
 endif
 
 all: $(SHARE_SOURCES) $(PUBLIC_SOURCES) $(PUBLIC)

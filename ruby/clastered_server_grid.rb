@@ -10,6 +10,7 @@ module ClasteredServer
 			@server_ids=[]
 			@grid_size=[0,0]
 			@id=0
+			@recover=1
 		end
 		
 		def get_owner(x,y)
@@ -41,12 +42,16 @@ module ClasteredServer
 			reconfigure
 		end
 		
+		def get_area(id)
+			return (@servers[id]||{})[:area]
+		end
+		
 		private
 		
 		def reconfigure
-			servers={}
+			@servers={}
 			counts=nil
-			size=@server_ids.size
+			size=@server_ids.size#/@recover
 			size.step(0,-1){|n|
 				size=n
 				counts=[(1..Math.sqrt(size).round).inject{|o,i| 
@@ -75,8 +80,10 @@ module ClasteredServer
 			#p (@offset/@cell[1]).ceil
 			@grid_size=[(@size[0]/@cell[0]).ceil,(@size[1]/@cell[1]).ceil]
 			#need to find nok
-			@server_ids.each_with_index{|id, i|
-				servers[id]={
+			0.step(@server_ids.size-1,1){|j|#@recover){|j|
+				id=@server_ids[j]
+				i=j#/@recover
+				@servers[id]={
 					id: id, 
 					index: i, 
 					area:{
@@ -92,7 +99,7 @@ module ClasteredServer
 			(@grid_size[1]).times{|y|
 				(@grid_size[0]).times{|x|
 #					puts "#{x} #{y} #{x/(@grid_size[0]/counts[0])+y/(@grid_size[1]/counts[1])*counts[0]}|#{@grid_size[1]/counts[1]}"
-					s=servers[@server_ids[x/(@grid_size[0]/counts[0])+y/(@grid_size[1]/counts[1])*counts[0]]]
+					s=@servers[@server_ids[x/(@grid_size[0]/counts[0])+y/(@grid_size[1]/counts[1])*counts[0]]]
 					o={}
 					o[:owner]=s[:id]
 					o[:shares]=[] #because Array is faster
@@ -159,6 +166,8 @@ module ClasteredServer
 	end
 end
 
+=begin
+
 size=[32000,32000]
 #data=ClasteredServer::Grid.new([8,8],2)
 #data=ClasteredServer::Grid.new([67,83],3)
@@ -167,3 +176,4 @@ data=ClasteredServer::Grid.new(size, 20)
 #data.reconfigure([1,24,-39,45,15,36,2,42,-6,-22], 24)
 data.add((1..9).map{|i| i})
 
+=end

@@ -1,18 +1,17 @@
 #include <vector>
 #include <map>
 #include <new>
+#include <algorithm>
 #include <cstdio>
 #include <cmath>
 #include <iostream>
 
-#include "clastered_server_grid_cpp.h"
+#include "clastered_server_grid.h"
 
 namespace clasteredServer {
 	struct server{
 		int id, index;
-		struct{
-			float l,t,r,b;
-		} area;
+		server_area area;
 	};
 
 	bool operator==(const data_cell &b, const data_cell &o) {
@@ -194,15 +193,6 @@ namespace clasteredServer {
 
 
 //c bindings
-#ifdef __cplusplus
-extern "C" {
-#endif
-
-#include "clastered_server_grid_c.h"
-
-#ifdef __cplusplus
-}
-#endif
 
 	clastered_server_grid_t clasteredServerGridInit(float size[2], float offset) {
 		try{
@@ -241,7 +231,6 @@ extern "C" {
 }
 
 /*
-
 int main(){
 	float a[2]={32000,32000};
 	clasteredServer::grid g(a,20);
@@ -252,7 +241,7 @@ int main(){
 	}
 	g.reconfigure(v);
 	
-//	printf("%d\n",g.getOwner(16123,23444));
+	printf("%d\n",g.getOwner(16123,23444));
 	
 	return 0;
 }

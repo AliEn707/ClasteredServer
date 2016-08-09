@@ -1,7 +1,8 @@
 require 'stringio'
 module ClasteredServer
 	class Packet
-
+		attr_reader :dest
+		
 		def initialize(type=nil)
 			@type=type
 			@n=0
@@ -74,9 +75,10 @@ module ClasteredServer
 		end
 		
 		def send(s)
-			s.write [@data.size, @type, @n<127 ? @n : -1].pack('vcc')
-			s.write @data
-			s.write @dest.pack('cV') if @dest
+			data=[@data.size+(@dest ? 7: 0), @type, @n<127 ? @n : -1].pack('vcc')
+			data+=@data
+			data+=@dest.pack('cV') if @dest
+			s.write data
 			return self
 		end
 		

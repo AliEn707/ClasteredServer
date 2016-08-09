@@ -118,7 +118,7 @@ static void* addServerIdToPacket(bintree_key k, void* v, void * p){
 	packetAddInt(p, k);
 	return 0;
 }
-///info about servers {2,0,0,0}
+///info about servers {3,0,0,0}
 static void *message3(server *sv, packet *p){
 	packetInitFast(p);
 	packetAddNumber(p, (char)MSG_S_SERVERS_INFO);
@@ -130,7 +130,7 @@ static void *message3(server *sv, packet *p){
 	return 0;
 }
 
-///move client to anther server {3,2,3,int,3,int,0,0}
+///move client to anther server {4,2,3,int,3,int,0,0}
 static void *message4(server *sv, packet *p){
 	client *c;
 	server *s;
@@ -145,13 +145,16 @@ static void *message4(server *sv, packet *p){
 	return 0;
 }
 
-//i'm ready {4,1,3,id,0,0}
-static void *message4(server *sv, packet *p){
-	server *s;
+///i'm ready {5,1,3,id,0,0}
+static void *message5(server *sv, packet *p){
 	char*buf=packetGetData(p);
 	int id=*((int*)(buf+3));
-	if (id==sv->id)
+	if (id==sv->id){
 		serverSetReady(sv);
+		printf("server %d ready\n", sv->id);
+	}else{
+		printf("server ready id error %d!=%d\n", sv->id, id);
+	}
 	return 0;
 }
 

@@ -153,7 +153,7 @@ static void* setUncheck(bintree_key k, void *v, void *arg){
 static int checkSlaves(slave_info *si, void *arg){
 	int id=serverIdByAddress(si->host, si->port);
 	server *s=serversGet(id);
-	printf("check server %d, got %d\n", id, s);
+//	printf("check server %d, got %d\n", id, s);
 	if (s==0){
 		if ((s=serverNew(si->host, si->port))!=0){
 			serversAdd(s);
@@ -201,7 +201,7 @@ void serversForEach(void*(*f)(bintree_key k, void *v, void *arg), void* a){
 static void* findAuto(bintree_key k, void *v, void *arg){
 	int2_t *d=arg;
 	server *s=v;
-	if (d->ready &&(d->i1==0 || d->i2>=s->$clients)){
+	if (s->ready &&(d->i1==0 || d->i2>=s->$clients)){
 		d->i1=s->id;
 		d->i2=s->$clients;
 //		return &s->id;
@@ -239,6 +239,7 @@ void serversTotalDec(){
 void serverPacketProceed(server *s, packet *p){
 	void* buf=packetGetData(p);
 	server_processor processor;
+//	printf("got server message %d\n", *((char*)buf));
 	if ((processor=messageprocessorServer(*((char*)buf)))==0){
 		//remove client data from the end
 		short size=packetGetSize(p);

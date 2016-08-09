@@ -88,17 +88,19 @@ socket_t *socketConnect(char *host, int port){
 
 
 void socketSemWrite(socket_t* sock, int act){
-	if (act==-1)
+	if (act==-1){
 		t_mutexLock(sock->mutex.write);
-	else
+	}else{
 		t_mutexUnlock(sock->mutex.write);
+	}
 }
 
 void socketSemRead(socket_t* sock, int act){
-	if (act==-1)
+	if (act==-1){
 		t_mutexLock(sock->mutex.read);
-	else
+	}else{
 		t_mutexUnlock(sock->mutex.read);
+	}
 }
 
 int socketSend(socket_t *sock, void * buf, int size){
