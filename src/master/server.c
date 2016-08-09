@@ -252,11 +252,11 @@ void serverPacketProceed(server *s, packet *p){
 				clientMessagesAdd(c, clientMessageNew(buf, size));
 			}
 		}else if (dir==MSG_SERVER){ //redirect packet to server
-			server* s=serversGet(_id);
+			server* sv=serversGet(_id);
 			packetAddChar(p, MSG_SERVER);//message from server
 			packetAddNumber(p, s->id);
-			if (s){
-				packetSend(p, s->sock);
+			if (sv){
+				packetSend(p, sv->sock);
 			}else if (_id==0){
 				serversPacketSendAll(p);
 			}

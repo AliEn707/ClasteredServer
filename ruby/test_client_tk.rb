@@ -30,7 +30,7 @@ class Npc
 	def initialize(world, id)
 		@id=id
 		@world=world
-		@obj=@world.drawer.c_rpoly(20, 70, 5, 5, state: 'hidden', fill:"white", outline: "black")
+		@obj=@world.drawer.c_rpoly(0, 0, 5, 5, state: 'hidden', fill:"white", outline: "black")
 		@dir=[0,0]
 		@goal=[0,0]
 		@position=[0,0]
@@ -159,7 +159,7 @@ Thread.new{
 		world.npcs.each{|k,v|
 		begin
 			packet.init
-			packet.recv(conn, false)
+			packet.recv(s, false)
 			p a=packet.parse
 			case a[0]
 				when 2 #client connected

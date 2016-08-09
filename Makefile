@@ -19,8 +19,8 @@ TEST_SOURCES=$(wildcard $(SRC)/$(TEST)/*.c) $(wildcard $(SRC)/$(TEST)/*/*.c) $(w
 TEST_OBJECTS=$(TEST_SOURCES:.c=.o)
 
 ifeq ($(DEBUG),1)
-    CFLAGS +=-g1 -ggdb 
-    CPPFLAGS +=-g1 -ggdb
+    CFLAGS +=-g -ggdb -rdynamic
+    CPPFLAGS +=-g -ggdb -rdynamic
 endif
 
 ifeq ($(OPTIMISATION),1)
