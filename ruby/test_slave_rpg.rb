@@ -12,7 +12,8 @@ class Npc
 		@dir=[0,0]
 		@goal=[0,0]
 		@position=[0,0]
-		@vel=1
+		@keys=[0,0,0,0]
+		@vel=2
 	end
 	
 	def move(x,y)
@@ -52,25 +53,43 @@ def time_diff(start, finish)
    (finish - start)
 end
 
+def addBot(npcs)
+	npc=Npc.new((rand*1000).to_i)
+	npc.bot=true
+	npcs[npc.id]=npc
+end
+
+
 server = TCPServer.new(12345)
 npcs={}
 connection=nil
-lat=1.0/30
+lat=1.0/10
+latr=1.0/600
 id=0
+clients={}
 
 Thread.new{
 	packet=ClasteredServer::Packet.new
 	loop{
 		t=Time.now
-		npcs.each{|k,v|
-			v.walk
-			packet.init.set_type(40).add_int(v.id).add_float(v.position[0]).add_float(v.position[1]).set_dest(1,v.client_id)
-			packet.send(connection)
-		}if connection && id!=0
+		begin
+			npcs.each{|k,v|
+				v.walk
+				packet.init.set_type(40).add_int(v.id).add_float(v.position[0]).add_float(v.position[1])
+				clients.each{|k,v|
+					packet.set_dest(1,v.client_id).send(connection)
+				}
+			}if connection && id!=0
+		rescue Exception => e
+			puts e
+			puts e.backtrace
+		end	
 		dif=time_diff(t,Time.now)
 		sleep(lat-dif) if (lat-dif>0)
 	}
-}
+} if false
+
+3.times{addBot(npcs)}
 
 puts "wait for connections"
 while (connection = server.accept)
@@ -83,44 +102,58 @@ while (connection = server.accept)
 			packet=ClasteredServer::Packet.new
 			packet.init
 			packet.recv(conn, true)
-			p a=packet.parse
-			if a[0]==2 #client connected
+			
+			a=packet.parse
+			if a[0]==2 #server connected
 				id=a[2]
 			end
 			puts "server id #{id}"
 			packet.init.set_type(5).add_int(id).set_dest(0,0).send(connection)
 			puts "ready"
-			loop do
+			loop{
+				t=Time.now
 				if (conn.ready?)
 					packet.init
 					packet.recv(conn, true)
-					p a=packet.parse
+					#p packet.to_s
+					a=packet.parse
 					case a[0]
 						when 5 #client connected
 							puts "connected client #{a[2]}"
 							npcs[a[2]]=Npc.new(a[2])
 							npcs[a[2]].client_id=a[2]
+							clients[npcs[a[2]].client_id]=npcs[a[2]]
 						when 6 #client disconnected
 							puts "disconnected client #{a[2]}"
-							npcs.delete[a[2]]
-						when 40
-							cl=npc[packet.dest[1]]
+							npcs.delete(a[2])
+							clients.delete(a[2])
+						when 41
+#							puts "kay #{a[2]} #{a[3]}" 
+							cl=npcs[packet.dest[1]]
 							if cl
 								cl.keys[a[2]]=a[3]
 								cl.set_dir
-								#do some stuff
 							end
 						else
 							puts "unknown packet"
 					end
 				end
+				npcs.each{|k,v|
+					v.walk
+					packet.init.set_type(40).add_int(v.id).add_float(v.position[0]).add_float(v.position[1])
+					clients.each{|k,v|
+						packet.set_dest(1,v.client_id).send(connection)
+					}
+				}if connection && id!=0
 	#        line = conn.read
 	#        puts "#{client} says: #{line}"
 	#        conn.write(line)
 	#        conn.write(conn.read(1))
-			end
+				dif=time_diff(t,Time.now)
+				sleep(lat-dif) if (lat-dif>0)
+			}
 		rescue EOFError => e
-			p e
+			puts e
 			conn.close
 			puts "#{client} has disconnected"
 		rescue Exception => e

@@ -247,11 +247,13 @@ void serverPacketProceed(server *s, packet *p){
 		char dir=*((typeof(dir)*)(buf+(size-=sizeof(dir))));
 		packetSetSize(p, size);
 		if (dir==MSG_CLIENT){ //redirect packet to client
+//			printf("redirect to client %d\n", _id);
 			client* c=0;
 			if (_id==0 || (c=clientsGet(_id))!=0){
 				clientMessagesAdd(c, clientMessageNew(buf, size));
 			}
 		}else if (dir==MSG_SERVER){ //redirect packet to server
+//			printf("redirect to server %d\n", _id);
 			server* sv=serversGet(_id);
 			packetAddChar(p, MSG_SERVER);//message from server
 			packetAddNumber(p, s->id);
@@ -286,7 +288,7 @@ void serversPacketSendAll(packet* p){
 int serverClientsAdd(server *s, void *_c){
 	client *c=_c;
 	packet *p;
-	c->server_id=s->id;
+	clientCritical(c,c->server_id=s->id);
 	t_mutexLock(s->mutex);
 		bintreeAdd(&s->clients, c->id, c);
 		s->$clients++;
@@ -351,3 +353,4 @@ void serverSetReady(server* s){
 		s->ready=1;
 	t_mutexUnlock(s->mutex);
 }
+

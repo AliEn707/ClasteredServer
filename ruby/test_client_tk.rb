@@ -1,5 +1,9 @@
+require 'socket'
+require 'io/wait'
+
 require_relative "clastered_server_drawer"
 require_relative "clastered_server_packet"
+require_relative "test_client"
 
 include ClasteredServer
 
@@ -36,6 +40,7 @@ class Npc
 		@position=[0,0]
 		@vel=1
 		@keys=[0,0,0,0]
+		@bot=false
 	end
 	
 	def move(x,y)
@@ -109,78 +114,75 @@ drawer.c_line(0, 15, 100, 15, 'width' => 2)
 drawer.c_line(0, 25, 100, 25, 'width' => 3)
 drawer.c_line(0, 35, 100, 35, 'width' => 4)
 =end
-n=Npc.new(world,-1)
-n.show!
+#n=Npc.new(world,-1)
 
 events={
-	"w"=>0,
-	"s"=>1,
-	'a'=>2,
-	'd'=>3
+	"w"=>1,
+	"s"=>3,
+	'a'=>0,
+	'd'=>2
 }
+keys=[0,0,0,0]
+#world.npcs[n.id]=n
+
+lat=1.0/18000
+
+s = TCPSocket.open("localhost", 8000)
+login="qwer"
 
 world.bind("KeyPress", 
 	proc{|e| 
+		packet=ClasteredServer::Packet.new
 		if events[e]
-			if n.keys[events[e]]!=1
-				n.keys[events[e]]=1
-				n.set_dir
-			end
+			packet.init.set_type(41).add_char(events[e]).add_char(1).send(s)
 		end
 	},
 "%K")
 world.bind("KeyRelease", 
 	proc{|e| 
+		packet=ClasteredServer::Packet.new
 		if events[e]
-			if n.keys[events[e]]!=0
-				n.keys[events[e]]=0
-				n.set_dir
-			end
+			packet.init.set_type(41).add_char(events[e]).add_char(0).send(s)
 		end
 	},
 "%K")
 
-world.npcs[n.id]=n
 
-100.times{|i|
-	npc=Npc.new(world,i)
-	npc.show!
-	npc.bot=true
-	npc.obj.fill="green"
-	world.npcs[npc.id]=npc
-}
 
-lat=1.0/30
+auth(s, login)
 
 Thread.new{
-	packet=ClasteredServerPacket.new
+	packet=ClasteredServer::Packet.new
 	loop{
-		t1=Time.now
-		world.npcs.each{|k,v|
 		begin
-			packet.init
-			packet.recv(s, false)
-			p a=packet.parse
-			case a[0]
-				when 2 #client connected
-					#do some stuff
-				when 40
-					cl=npc[a[2]]
-					if cl
-						cl.update_position(a[3],a[4])
+			t1=Time.now
+			if s.ready?
+				packet.init
+				packet.recv(s, false)
+				a=packet.parse
+				case a[0]
+					when 2 
 						#do some stuff
-					end
-				else
-					puts "unknown packet"
+					when 40
+						cl=world.npcs[a[2]] || world.npcs[a[2]]=Npc.new(world,a[2])
+						if cl
+							cl.show!
+							cl.update_position(a[4],a[6])
+							#do some stuff
+						end
+					else
+						puts "unknown packet"
+				end
 			end
-		rescue Exeption=> e
+			dif=time_diff(t1,Time.now)
+			sleep(lat-dif) if (lat-dif>0)
+		rescue Exception=> e
 			puts e
-			puts backtrace
+			puts e.backtrace
 		end
-		}
-		dif=time_diff(t1,Time.now)
-		sleep(lat-dif) if (lat-dif>0)
 	}
 }
 
 Drawer.loop
+
+s.close

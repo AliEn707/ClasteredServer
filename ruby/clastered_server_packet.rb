@@ -75,7 +75,7 @@ module ClasteredServer
 		end
 		
 		def send(s)
-			data=[@data.size+(@dest ? 7: 0), @type, @n<127 ? @n : -1].pack('vcc')
+			data=[@data.size+(@dest ? 7: 2), @type, @n<127 ? @n : -1].pack('vcc')
 			data+=@data
 			data+=@dest.pack('cV') if @dest
 			s.write data

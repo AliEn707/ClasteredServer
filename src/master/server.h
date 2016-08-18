@@ -7,7 +7,7 @@
 #include "../share/network/socket.h"
 #include "../share/network/packet.h"
 
-#define MSG_SERVER 1
+#define MSG_SERVER 2
 
 typedef 
 struct {

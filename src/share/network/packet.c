@@ -48,12 +48,14 @@ int packetSend(packet *p, socket_t *sock){
 		if (sock->encode)
 			sock->encode(p->buf,p->$buf,sock->_encode);
 		socketSemWrite(sock,-1);
-			if ((o=socketSendNumber(sock, p->$buf))>0){
-				if((_o=socketSend(sock, p->buf, p->$buf))<=0)
-					o=_o;
-				else
-					o+=_o;
-			}
+			socketSork(sock,1);
+				if ((o=socketSendNumber(sock, p->$buf))>0){
+					if((_o=socketSend(sock, p->buf, p->$buf))<=0)
+						o=_o;
+					else
+						o+=_o;
+				}
+			socketSork(sock,0);
 		socketSemWrite(sock,1);
 		return o;
 	}

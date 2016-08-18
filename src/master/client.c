@@ -138,7 +138,7 @@ int clientPacketProceed(client *c, packet *p){
 	char* buf=packetGetData(p);
 	client_processor processor;
 	//void*(*processor)(packet*);
-	printf("got message %d\n", *buf);
+//	printf("got message %d\n", *buf);
 	if ((processor=messageprocessorClient(*buf))==0){
 //	if (*buf<0){//proxy
 //		printf("redirect message\n");
@@ -224,11 +224,15 @@ void clientMessageClear(client_message* m){
 	t_mutexLock(m->mutex);
 		m->num--;
 	t_mutexUnlock(m->mutex);
+	t_mutexLock(m->mutex);
 	if (m->num==0){	
+		t_mutexUnlock(m->mutex);
 		t_mutexRemove(m->mutex);
 		free(m->data);
 		free(m);
+		return;
 	}
+	t_mutexUnlock(m->mutex);
 }
 
 void clientChatsAdd(client* cl, void* _c){
@@ -265,7 +269,9 @@ void clientChatsRemove(client* cl, void* _c){
 }
 
 void clientMessagesProceed(client *c, void* (*me)(void* d, void * _c), void *a){
-	voidp2_t arg={c, a};
+	voidp2_t arg;
+	arg.p1=c;
+	arg.p2=a;
 	t_mutexLock(c->mutex);
 		worklistForEachRemove(&c->messages, me, &arg);
 	t_mutexUnlock(c->mutex);

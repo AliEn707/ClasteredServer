@@ -27,6 +27,8 @@ socket_t *socketConnect(char *host, int port);
 void socketSemWrite(socket_t *sock, int act);
 void socketSemRead(socket_t *sock, int act);
 
+void socketSork(socket_t *sock, int flag);
+
 int socketSend(socket_t *sock, void *buf, int size);
 
 #define socketSendNumber(sock, x) ({\

@@ -47,8 +47,8 @@ static void* clientMessageEach(void* d, void * _arg){
 	if (m->ready){
 		t_mutexUnlock(m->mutex);
 		packetInitFast(p);
-		packetAddData(p,m->data,m->$data);
-		packetSend(p,c->sock);
+		packetAddData(p, m->data,m->$data);
+		packetSend(p, c->sock);
 		clientMessageClear(m);
 		return d;
 	}

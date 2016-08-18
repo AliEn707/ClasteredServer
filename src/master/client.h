@@ -12,7 +12,7 @@
 #include "../share/network/packet.h"
 
 #define CLIENT_CONN_SOCKET 1
-#define MSG_CLIENT 0
+#define MSG_CLIENT 1
 
 typedef 
 struct {
@@ -23,7 +23,7 @@ struct {
 	
 	short conn_type;
 	short broken;
-	short server_id;
+	int server_id;
 	socket_t *sock;
 	t_mutex_t mutex;
 	worklist messages;

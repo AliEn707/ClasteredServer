@@ -1,8 +1,9 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/poll.h>
-#include <string.h>
 #include <netinet/in.h>
+#include <netinet/tcp.h>
+#include <string.h>
 #include <unistd.h>
 #include <stdlib.h>
 #include <stdio.h>
@@ -56,6 +57,11 @@ int socketClear(socket_t *sock){
 	return 0;
 }
 
+void socketSork(socket_t * s, int flag){
+#ifndef __CYGWIN__
+	setsockopt(s->sockfd, IPPROTO_TCP, TCP_CORK, (char *) &flag, sizeof(flag));//maybe try TCP_NODELAY
+#endif
+}
 
 socket_t *socketConnect(char *host, int port){
 	int sockfd;

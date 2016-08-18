@@ -130,7 +130,7 @@ static void *message3(server *sv, packet *p){
 	return 0;
 }
 
-///move client to anther server {4,2,3,int,3,int,0,0}
+///move client to another server {4,2,3,int,3,int,0,0}
 static void *message4(server *sv, packet *p){
 	client *c;
 	server *s;
@@ -152,13 +152,36 @@ static void *message5(server *sv, packet *p){
 	if (id==sv->id){
 		serverSetReady(sv);
 		printf("server %d ready\n", sv->id);
+		if (p!=0){
+			packetInitFast(p);
+			packetAddNumber(p, (char)MSG_S_SERVER_READY);
+			packetAddNumber(p, (char)1);
+			packetAddInt(p, sv->id);
+			packetAddNumber(p, (char)0);
+			packetAddNumber(p, (int)0);
+			///send packet
+			serversPacketSendAll(p);
+		}
 	}else{
 		printf("server ready id error %d!=%d\n", sv->id, id);
 	}
 	return 0;
 }
 
-voidMessageProcessor(6)
+static int id=1;
+///i need new id {6,0,0}
+static void *message6(server *sv, packet *p){
+	packetInitFast(p);
+	packetAddNumber(p, (char)MSG_S_NEW_ID);
+	packetAddNumber(p, (char)1);
+	packetAddInt(p, (char)id++);
+	packetAddNumber(p, (char)0);
+	packetAddNumber(p, (int)0);
+	packetSend(p, sv->sock);
+	return 0;
+}
+
+
 voidMessageProcessor(7)
 voidMessageProcessor(8)
 voidMessageProcessor(9)
@@ -173,6 +196,11 @@ voidMessageProcessor(17)
 voidMessageProcessor(18)
 voidMessageProcessor(19)
 voidMessageProcessor(20)
+voidMessageProcessor(21)
+voidMessageProcessor(22)
+voidMessageProcessor(23)
+voidMessageProcessor(24)
+voidMessageProcessor(25)
 
 
 void serverMessageProcessorInit(){
@@ -196,5 +224,10 @@ void serverMessageProcessorInit(){
 	serverMessageProcessor(18);
 	serverMessageProcessor(19);
 	serverMessageProcessor(20);
+	serverMessageProcessor(21);
+	serverMessageProcessor(22);
+	serverMessageProcessor(23);
+	serverMessageProcessor(24);
+	serverMessageProcessor(25);
 }
 
