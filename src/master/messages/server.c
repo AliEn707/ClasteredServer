@@ -115,7 +115,9 @@ static void *message2(server *sv, packet *p){
 }
 
 static void* addServerIdToPacket(bintree_key k, void* v, void * p){
-	packetAddInt(p, k);
+	server* s=v;
+	packetAddInt(p, s->id);
+	printf("info server %d\n", s->id);
 	return 0;
 }
 ///info about servers {3,0,0,0}
@@ -136,10 +138,13 @@ static void *message4(server *sv, packet *p){
 	server *s;
 	char*buf=packetGetData(p);
 	int id=*((int*)(buf+3));
+	int cid=*((int*)(buf+8));
+	printf("move %d to  server %d\n",id, cid);
 	if ((c=serverClientsGet(sv, id))!=0){
-		if((s=serversGet(*((int*)(buf+8))))!=0){
+		if((s=serversGet(cid))!=0){
 			serverClientsRemove(sv, c);//func will send message
 			serverClientsAdd(s, c);//func will send message
+			printf("moved\n");
 		}
 	}
 	return 0;

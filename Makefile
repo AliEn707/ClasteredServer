@@ -32,7 +32,7 @@ ifeq ($(OPTIMISATION),1)
     CPPFLAGS +=-O3 -ffast-math -fgcse-sm -fgcse-las -fgcse-after-reload -flto -funroll-loops
 endif
 
-all: $(SHARE_SOURCES) $(PUBLIC_SOURCES) $(PUBLIC)
+all: $(SHARE_SOURCES) $(PUBLIC_SOURCES) $(SLAVE_SOURCES) $(PUBLIC) $(SLAVE)
 	
 $(PUBLIC): $(SHARE_OBJECTS) $(PUBLIC_OBJECTS)
 	$(GCC) $(SHARE_OBJECTS) $(PUBLIC_OBJECTS) $(LDFLAGS) -o $@
@@ -58,4 +58,4 @@ $(PUBLIC)_fast:
 	$(GCC) $(CFLAGS) $(SHARE_SOURCES) $(PUBLIC_SOURCES) $(LDFLAGS) -o $(PUBLIC)
 
 clean:
-	rm -rf $(SLAVE_OBJECTS) $(SHARE_OBJECTS) $(PUBLIC_OBJECTS) $(TEST_OBJECTS) $(PUBLIC) $(TEST) $(PUBLIC).exe $(TEST).exe generator.exe generator
+	rm -rf $(SLAVE_OBJECTS) $(SHARE_OBJECTS) $(PUBLIC_OBJECTS) $(TEST_OBJECTS) $(PUBLIC) $(TEST) $(PUBLIC).exe $(SLAVE) $(SLAVE).exe $(TEST).exe generator.exe generator

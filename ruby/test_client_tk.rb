@@ -11,9 +11,9 @@ class World
 	attr_reader :drawer, :size
 	attr_accessor :npcs
 	def initialize(x,y, cell)
-		@scale=600.0/x
+		@scale=1#600.0/x
 		@size=[x,y]
-		@drawer=Drawer.new(600,y*@scale,0,0, scale: 1/@scale, translate:{x: 0,y: 0})
+		@drawer=Drawer.new(x,y,0,0, scale: 1/@scale, translate:{x: 0,y: 0})
 		@npcs={}
 		@cell=cell
 		@objects=[]
@@ -96,7 +96,7 @@ end
 
 #########
 
-world=World.new(600,600,0)
+world=World.new(200,200,0)
 drawer=world.drawer
 
 #mouse event listener
