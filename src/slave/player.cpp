@@ -12,20 +12,22 @@ namespace clasteredServerSlave{
 
 	player::player(int _id){
 		id=_id;
+		npc=0;
+		//add position get, check and redirest to write server
 		for(std::map<int, clasteredServerSlave::npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
 			clasteredServerSlave::npc* n=it->second;
 			if (n && n->owner_id==id){
 				npc=n;
+				printf("found npc %d for user %d\n", npc->id, id);
 				break;
 			}
 		}
+//		printf("npc - %d\n", npc);
 		if (!npc){
 			npc=new clasteredServerSlave::npc(world::getId());
 			npc->owner_id=id;
 			printf("created npc %d for user %d\n", npc->id, id);
-			world::m.lock();
-				world::npcs[npc->id]=npc;
-			world::m.unlock();
+			world::npcs[npc->id]=npc;
 			packet p;
 			p.dest.type=CLIENT_MESSAGE;
 			p.dest.id=id;
@@ -47,12 +49,15 @@ namespace clasteredServerSlave{
 	void player::sendUpdates(){
 		for(std::map<int, clasteredServerSlave::npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
 			clasteredServerSlave::npc* n=it->second;
-			if (n)
-				if (withLock(n->m,n->updated())){
-					n->pack();
-					n->p.dest.id=id;
-					world::sock->send(&n->p);
-				}
+			if (n){
+				n->m.lock();
+					if (n->updated()){
+						n->pack();
+						n->p.dest.id=id;
+						world::sock->send(&n->p);
+					}
+				n->m.unlock();
+			}
 		}
 	}
 	

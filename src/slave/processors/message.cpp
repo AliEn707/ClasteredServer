@@ -38,7 +38,7 @@ namespace clasteredServerSlave {
 	static void* message5(packet* p){
 		//client connected
 		printf("client connected %d\n", p->chanks[0].value.i);
-		world::players[p->chanks[0].value.i]=new player(p->chanks[0].value.i);
+		withLock(world::m, world::players[p->chanks[0].value.i]=new player(p->chanks[0].value.i));
 		return 0;
 	}
 	
@@ -48,9 +48,11 @@ namespace clasteredServerSlave {
 		player *pl=world::players[p->chanks[0].value.i];
 		if (pl){
 			if (pl->npc){
-				pl->npc->slave_id=0;
+				withLock(pl->npc->m, pl->npc->slave_id=0);
 			}
-			world::players.erase(p->chanks[0].value.i);
+			world::m.lock();
+				world::players.erase(p->chanks[0].value.i);
+			world::m.unlock();
 			delete pl;
 		}
 		return 0;
@@ -76,23 +78,21 @@ namespace clasteredServerSlave {
 		if (p->dest.type==CLIENT_MESSAGE){
 			
 		}else{//npc info
-			npc* n;
-			withLock(world::m, n=world::npcs[p->chanks[0].value.i]);
+			npc* n=withLock(world::m, world::npcs[p->chanks[0].value.i]);
 			if (!n){
 				n=new npc(p->chanks[0].value.i, p->dest.id);
-				withLock(world::m, world::npcs[n->id]=n);
 				packet p1;
-				p1.setType(41);
+				p1.setType(MSG_SERVER_NPC_INFO);//get full info
 				p1.add(n->id);
 				p1.dest.type=SERVER_MESSAGE;
 				p1.dest.id=p->dest.id;
 				world::sock->send(&p1);
+				withLock(world::m, world::npcs[n->id]=n);
 			}
 			n->m.lock();
 				n->update(p);
 			n->m.unlock();
 		}
-		//proseed npc data
 		return 0;
 	}
 	
@@ -100,10 +100,10 @@ namespace clasteredServerSlave {
 		if (p->dest.type==CLIENT_MESSAGE){//keys status
 			player* pl=world::players[p->dest.id];
 			if (pl && pl->npc){
-				for(unsigned i=0;i<p->chanks.size();i+=2){
-					pl->npc->keys[(int)p->chanks[i].value.c]=p->chanks[i+1].value.c;
-				}
 				pl->npc->m.lock();
+					for(unsigned i=0;i<p->chanks.size();i+=2){
+						pl->npc->keys[(int)p->chanks[i].value.c]=p->chanks[i+1].value.c;
+					}
 					pl->npc->set_dir();
 				pl->npc->m.unlock();
 			}
@@ -112,14 +112,15 @@ namespace clasteredServerSlave {
 				npc* n;
 				withLock(world::m, n=world::npcs[p->chanks[i].value.i]);
 				if (n){
-					n->pack(1,1);
-					n->p.dest.id=p->dest.id;
-					world::sock->send(&n->p);
+					n->m.lock();
+						n->pack(1,1);
+						n->p.dest.id=p->dest.id;
+						world::sock->send(&n->p);
+					n->m.unlock();
 					printf("sent info about %d\n",n->id);
 				}
 			}
 		}
-		//proseed npc data
 		return 0;
 	}
 	

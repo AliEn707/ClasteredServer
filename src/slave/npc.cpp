@@ -12,7 +12,7 @@ using namespace clasteredServer;
 namespace clasteredServerSlave{
 
 	void normalize(pointf* p){
-		float l=sqrtf(p->x*p->x+p->y*p->y);
+		float l=sqrtf(sqr(p->x)+sqr(p->y));
 		if (l>0){
 			p->x/=l;
 			p->y/=l;
@@ -22,6 +22,12 @@ namespace clasteredServerSlave{
 	npc::npc(int _id, int slave){
 		id=_id;
 		slave_id=slave?:world::id;
+		
+		memset(&bot,0,sizeof(bot));
+		memset(keys,0,sizeof(keys));
+		memset(&direction,0,sizeof(direction));
+		memset(&_updated,0,sizeof(_updated));
+		
 		attr_shift.push_back(&position.x); //0
 		attr_shift.push_back(&position.y); //1
 		attr_shift.push_back(&direction.x);
@@ -31,17 +37,29 @@ namespace clasteredServerSlave{
 			shift_attr[attr_shift[i]]=i;
 			attrs.push_back(0);
 		}
+		timestamp=time(0);
 		///
 		vel=1;
 	}
 	
-	void npc::clear(){
+	npc::~npc(){
+		player*p=world::players[owner_id];
+		if (p)
+			p->npc=0;
+	}
+		
+	bool npc::clear(){
+		if (time(0)-timestamp>15 && (gridOwner()!=world::id || (!bot.used && !world::players[owner_id]))){
+			return 1;
+		}
+			
 		for(std::vector<bool>::iterator it = attrs.begin(), end = attrs.end();it != end; ++it){
 			*it=0;
 		}
 		_updated.pack.done=0;
 		_updated.pack.all=0;
 		_updated.pack.server=0;
+		return 0;
 	}
 	
 	void npc::move(){
@@ -115,12 +133,17 @@ namespace clasteredServerSlave{
 						break;
 					case -5:
 						keys[3]=p->chanks[i].value.c;
+						break;					
+					case -6:
+						bot.goal.x=p->chanks[i].value.f;
+						break;					
+					case -7:
+						bot.goal.y=p->chanks[i].value.f;
 						break;
-					
 				}
-				set_dir();
 			}
 		}
+		set_dir();
 	}
 	
 	bool npc::updated(){
@@ -134,11 +157,9 @@ namespace clasteredServerSlave{
 #define packAttr(p,a)\
 	if (attrs[attr(&(a))]){\
 		p.add((char)attr(&(a)));\
-		m.lock();\
-			p.add(a);\
-		m.unlock();\
+		p.add(a);\
 	}
-	//includes locks
+	
 	void npc::pack(bool all, bool server){
 		if (!_updated.pack.done || 
 				_updated.pack.server!=server || 
@@ -154,18 +175,21 @@ namespace clasteredServerSlave{
 			p.dest.type=server?SERVER_MESSAGE:CLIENT_MESSAGE;
 			if (all){
 				p.add((char)-1);
-				m.lock();
-					p.add(owner_id);
-				m.unlock();
+				p.add(owner_id);
 				_updated.pack.all=1;
 			} 
 			if (server){
-				m.lock();
-				for(int i=0;i<4;i++){
-					p.add((char)(-2-i));
-					p.add((char)keys[i]);
+				if (!bot.used){
+					for(int i=0;i<4;i++){
+						p.add((char)(-2-i));//-2 to -5
+						p.add((char)keys[i]);
+					}
+				}else{
+					p.add((char)-6);
+					p.add(bot.goal.x);
+					p.add((char)-7);
+					p.add(bot.goal.y);
 				}
-				m.unlock();
 				_updated.pack.server=1;
 			} 
 			_updated.pack.done=1;
@@ -182,7 +206,16 @@ namespace clasteredServerSlave{
 		n->bot.goal.x=n->position.x+n->direction.x*n->vel;
 		n->bot.goal.y=n->position.y+n->direction.y*n->vel;
 		n->bot.used=1;
-		world::npcs[n->id]=n;
+		withLock(world::m, world::npcs[n->id]=n);
 		return n->id;
 	}
+	
+	int npc::gridOwner(){
+		return world::grid->getOwner(position.x, position.y);
+	}
+	
+	std::vector<int> npc::gridShares(){
+		return world::grid->getShares(position.x, position.y);		
+	}
+	
 }

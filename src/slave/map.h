@@ -22,18 +22,22 @@ namespace clasteredServerSlave {
 	struct cell{
 		int id;
 		std::vector<npc*> npcs;
+		
+		npc* getNpc(int id);
+		void addNpc(npc *n);
 	};
 
 	class map {
 		public:
 			pointf source;
 			pointf size;
-			cell* grid;
+			pointf cell;
+			clasteredServerSlave::cell* grid;
 			
 			map();
 			~map();
-			cell* cells(int id);
-			cell* cells(float x, float y);
+			clasteredServerSlave::cell* cells(int id);
+			clasteredServerSlave::cell* cells(float x, float y);
 			void reconfigure();
 	};
 }

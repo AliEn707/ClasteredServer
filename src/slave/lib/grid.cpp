@@ -142,6 +142,7 @@ namespace clasteredServer {
 		o.shares.push_back(server_ids[(y1)*counts[0]+x1])
 //		printf("grid_size %d %d total %d\n",grid_size[0],grid_size[1],grid_size[0]*grid_size[1]);
 		data=new data_cell*[grid_size[0]*grid_size[1]+1];
+		int _offset[2]={(int)ceil(offset/cell[0]),(int)ceil(offset/cell[1])};
 		for(int y=0;y<grid_size[1];y++){
 			for(int x=0;x<grid_size[0];x++){
 				server s=servers[server_ids[x/(grid_size[0]/counts[0])+y/(grid_size[1]/counts[1])*counts[0]]];
@@ -150,7 +151,6 @@ namespace clasteredServer {
 				if (id==0 || s.id==id){
 					int ix=s.index%counts[0];
 					int iy=s.index/counts[0];
-					int _offset[2]={(int)ceil(offset/cell[0]),(int)ceil(offset/cell[1])};
 					bool l=s.area.l<=x && x<s.area.l+_offset[0];
 					bool t=s.area.t<=y && y<s.area.t+_offset[1];
 					bool r=s.area.r>x && x>=s.area.r-_offset[0];

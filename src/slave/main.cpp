@@ -40,13 +40,13 @@ static void segfault_sigaction(int sig){
 	fprintf(stderr, "Error: signal %d:\n", sig);
 	backtrace_symbols_fd(array, size, STDERR_FILENO);
 #endif
-	world::main_loop=0;
+	world::main_loop=(world::main_loop+1)&1;
 	world::clear();
 	exit(1);
 }
 
 int main(int argc, char* argv[]){
-	int TPS=28;
+	int TPS=24;
 	clasteredServer::sync syncer;
 	struct sigaction sa;
 	//pthread_t pid;
@@ -82,71 +82,77 @@ int main(int argc, char* argv[]){
 		syncer.timePassed();
 		//clear flags
 		world::m.lock();
-		for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
-			npc* n=it->second;
-			if (n){
-				n->m.lock();
-					n->clear();
-				n->m.unlock();
+			for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
+				npc* n=it->second;
+				if (n){
+					if (withLock(n->m, n->clear())){
+						world::npcs[n->id]=0;
+						delete n;
+					}
+				}
 			}
-		}
 		world::m.unlock();
 		//now move
 		world::m.lock();
-		for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
-			npc* n=it->second;
-			if (n){
-				n->m.lock();
-//				printf("%d on %d from %d\n", n->id, world::id, n->slave_id);
-				if (world::id==world::grid->getOwner(n->position.x, n->position.y);)
-					n->move();
-				n->m.unlock();
+			for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
+				npc* n=it->second;
+//				printf("n %d\n",n);
+				if (n){
+					n->m.lock();
+//						printf("%d on %d from %d\n", n->id, world::id, n->gridOwner());
+						if (world::id==n->gridOwner())
+							n->move();
+					n->m.unlock();
+				}
 			}
-		}
 		world::m.unlock();
-		//send data
+		//send data to players
 		world::m.lock();
-		for(std::map<int, player*>::iterator it = world::players.begin(), end = world::players.end();it != end; ++it){
-			if (it->second)
-				it->second->sendUpdates();
-		}		
+			for(std::map<int, player*>::iterator it = world::players.begin(), end = world::players.end();it != end; ++it){
+				if (it->second)
+					it->second->sendUpdates();
+			}		
 		world::m.unlock();
 		//check areas
 		world::m.lock();
-		for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
-			npc *n=it->second;
-			if (n){
-				int oid=world::grid->getOwner(n->position.x, n->position.y);
-/*				printf("%d on (%g %g) %d :",n->id, n->position.x, n->position.y,oid);
-				std::vector<int> shares=world::grid->getShares(n->position.x, n->position.y);
-				for(unsigned i=0;i<shares.size();i++){
-					printf("%d ", shares[i]);
-				}
-				printf(":\n");
-*///				printf("%d on %d==%d\n", n->id, world::id, oid);
-				if (world::id==oid){
-					//i am owner
-					if (withLock(n->m,n->updated())){
-						std::vector<int> shares=world::grid->getShares(n->position.x, n->position.y);
-						n->pack(1,1);
-						for(unsigned i=0;i<shares.size();i++){
-							n->p.dest.id=shares[i];
-							world::sock->send(&n->p);
+			for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
+				npc *n=it->second;
+				if (n){
+					int oid=n->gridOwner();
+/*					printf("%d on (%g %g) %d :",n->id, n->position.x, n->position.y,oid);
+					std::vector<int> shares=world::grid->getShares(n->position.x, n->position.y);
+					for(unsigned i=0;i<shares.size();i++){
+						printf("%d ", shares[i]);
+					}
+					printf(":\n");
+*/	//				printf("%d on %d==%d\n", n->id, world::id, oid);
+					if (world::id==oid){
+						//i am owner
+						n->m.lock();
+							if (n->updated()){
+								std::vector<int> shares=n->gridShares();
+								n->pack(0,1);
+								for(unsigned i=0;i<shares.size();i++){
+									n->p.dest.id=shares[i];
+									world::sock->send(&n->p);
+								}
+							}
+						n->m.unlock();
+					}else{
+						//i am not owner		
+						player *p;
+	//					printf("i'm not owner\n");
+						if ((p=world::players[n->owner_id])!=0){
+							n->m.lock();
+								n->pack(1,1);
+								n->p.dest.id=oid;
+								world::sock->send(&n->p);
+							n->m.unlock();
+							p->move();
 						}
 					}
-				}else{
-					//i am not owner		
-					player *p;
-//					printf("i'm not owner\n");
-					if ((p=world::players[n->owner_id])!=0){
-						n->pack(1,1);
-						n->p.dest.id=oid;
-						world::sock->send(&n->p);
-						p->move();
-					}
 				}
-			}
-		}	
+			}	
 		world::m.unlock();
 		syncer.syncTPS(TPS);
 	}
@@ -155,4 +161,5 @@ int main(int argc, char* argv[]){
 	//pthread_join(pid,0);
 	world::clear();
 	sleep(1);
+	return 1;
 }

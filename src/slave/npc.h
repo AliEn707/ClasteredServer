@@ -57,8 +57,8 @@ namespace clasteredServerSlave {
 			std::vector<bool> attrs; //attributes flags
 	
 			npc(int id, int slave=0);
-			//~npc();
-			void clear();
+			~npc();
+			bool clear();
 			void move();
 			void move(float x, float y);
 			void set_dir();
@@ -67,7 +67,9 @@ namespace clasteredServerSlave {
 			void* attr(int index);//get pointer to attribute, size is size of attribute
 			void update(clasteredServer::packet * p);
 			bool updated(); 			
-			void pack(bool all=0, bool server=0); 	
+			void pack(bool all=0, bool server=0); 
+			int gridOwner();
+			std::vector<int> gridShares();
 
 			static int addBot(float x, float y);
 		private:
