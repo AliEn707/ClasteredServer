@@ -70,12 +70,20 @@ namespace clasteredServerSlave{
 	void npc::move(float x, float y){
 		position.x+=x;
 		attrs[attr(&position.x)]=1;
+		if (position.x<0)
+			bot.goal.x=position.x=0;
+		if (position.x>=world::map_size[0])
+			bot.goal.x=position.x=world::map_size[0]-1;
 		position.y+=y;
 		attrs[attr(&position.y)]=1;
+		if (position.y<0)
+			bot.goal.y=position.y=0;
+		if (position.y>=world::map_size[1])
+			bot.goal.y=position.y=world::map_size[1]-1;
 		if (bot.used){
 			if (sqr(position.x-bot.goal.x)+sqr(position.y-bot.goal.y)<=2*vel){
-				bot.goal.x=(rand()%1000)/10.0;
-				bot.goal.y=(rand()%1000)/10.0;
+				bot.goal.x=(rand()%((int)world::map_size[0]*100))/100.0;
+				bot.goal.y=(rand()%((int)world::map_size[1]*100))/100.0;
 				set_dir();
 			}
 		}
@@ -135,10 +143,16 @@ namespace clasteredServerSlave{
 						keys[3]=p->chanks[i].value.c;
 						break;					
 					case -6:
-						bot.goal.x=p->chanks[i].value.f;
+						bot.used=p->chanks[i].value.c;
+						printf("%d got bot used x %d\n", id, bot.used);
 						break;					
 					case -7:
+						bot.goal.x=p->chanks[i].value.f;
+						printf("%d got goal x %g\n",id, bot.goal.x);
+						break;					
+					case -8:
 						bot.goal.y=p->chanks[i].value.f;
+						printf("%d got goal y %g\n",id, bot.goal.y);
 						break;
 				}
 			}
@@ -179,15 +193,17 @@ namespace clasteredServerSlave{
 				_updated.pack.all=1;
 			} 
 			if (server){
+				p.add((char)-6);
+				p.add((char)bot.used);
 				if (!bot.used){
 					for(int i=0;i<4;i++){
 						p.add((char)(-2-i));//-2 to -5
 						p.add((char)keys[i]);
 					}
 				}else{
-					p.add((char)-6);
-					p.add(bot.goal.x);
 					p.add((char)-7);
+					p.add(bot.goal.x);
+					p.add((char)-8);
 					p.add(bot.goal.y);
 				}
 				_updated.pack.server=1;
@@ -196,6 +212,14 @@ namespace clasteredServerSlave{
 		}
 	}
 #undef packAttr
+	
+	int npc::gridOwner(){
+		return world::grid->getOwner(position.x, position.y);
+	}
+	
+	std::vector<int> npc::gridShares(){
+		return world::grid->getShares(position.x, position.y);		
+	}
 	
 	int npc::addBot(float x, float y){
 		npc* n=new npc(world::getId());
@@ -208,14 +232,6 @@ namespace clasteredServerSlave{
 		n->bot.used=1;
 		withLock(world::m, world::npcs[n->id]=n);
 		return n->id;
-	}
-	
-	int npc::gridOwner(){
-		return world::grid->getOwner(position.x, position.y);
-	}
-	
-	std::vector<int> npc::gridShares(){
-		return world::grid->getShares(position.x, position.y);		
 	}
 	
 }

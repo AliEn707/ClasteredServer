@@ -12,6 +12,7 @@ using namespace clasteredServerSlave;
 
 static void* threadFunc(void *arg){
 	packet p;
+	int bots=2;
 	
 	world::sock->recv(&p);
 	world::id=p.chanks[0].value.i;
@@ -59,6 +60,10 @@ static void* threadFunc(void *arg){
 			f(&p);
 		else
 			printf("unknown message\n");
+		if (bots>0 && world::ids.size()>0){
+			npc::addBot(10,10);
+			bots--;
+		}
 	}
 	world::main_loop=0;
 	return 0;
