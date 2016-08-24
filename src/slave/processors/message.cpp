@@ -16,21 +16,21 @@ namespace clasteredServerSlave {
 	static void* message2(packet* p){
 		//server connected
 		printf("server %d connected\n", p->chanks[0].value.i);
-		world::grid->add(p->chanks[0].value.i, 1);
+		withLock(world::m, world::grid->add(p->chanks[0].value.i, 1));
 		return 0;
 	}
 	
 	static void* message3(packet* p){
 		//server disconnected
 		printf("server %d disconnected\n", p->chanks[0].value.i);
-		world::grid->remove(p->chanks[0].value.i, 1);
+		withLock(world::m, world::grid->remove(p->chanks[0].value.i, 1));
 		return 0;
 	}
 	
 	static void* message4(packet* p){
 		//servers info
-		for(unsigned i=0;i<p->chanks.size();i++){
-			world::grid->add(p->chanks[i].value.i, i==p->chanks.size()-1);//reconfigure on last
+		for(unsigned i=0, s=p->chanks.size();i<s;i++){
+			withLock(world::m, world::grid->add(p->chanks[i].value.i, i==s-1));//reconfigure on last
 		}
 		return 0;
 	}
@@ -68,7 +68,7 @@ namespace clasteredServerSlave {
 	static void* message10(packet* p){
 		//server ready
 		printf("server %d ready\n", p->chanks[0].value.i);
-		world::grid->add(p->chanks[0].value.i, 1);
+		withLock(world::m, world::grid->add(p->chanks[0].value.i, 1));
 		//add grid update
 		return 0;
 	}
@@ -89,6 +89,7 @@ namespace clasteredServerSlave {
 				world::sock->send(&p1);
 				withLock(world::m, world::npcs[n->id]=n);
 			}
+			printf("got info about %d\n", n->id);
 			n->m.lock();
 				n->update(p);
 			n->m.unlock();
@@ -103,6 +104,7 @@ namespace clasteredServerSlave {
 				pl->npc->m.lock();
 					for(unsigned i=0;i<p->chanks.size();i+=2){
 						pl->npc->keys[(int)p->chanks[i].value.c]=p->chanks[i+1].value.c;
+						printf("key %d status %d\n", p->chanks[i].value.c, p->chanks[i+1].value.c);
 					}
 					pl->npc->set_dir();
 				pl->npc->m.unlock();

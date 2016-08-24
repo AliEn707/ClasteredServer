@@ -191,10 +191,10 @@ namespace clasteredServer {
 		char* buf=(char*)data();
 		int s=size();
 		chanks.clear();
-		for(int i=2;i<s;){
+		for(int i=2;i<s-1;){//TODO: find why mesage have nonpared type
 			packet_chank chank;
 			chank.type=buf[i];
-			switch(buf[i]){
+			switch(chank.type){
 				case 1:
 					chank.value.c=buf[(++i)++];
 					chanks.push_back(chank);

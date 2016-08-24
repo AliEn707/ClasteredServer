@@ -86,6 +86,12 @@ namespace clasteredServer {
 //					send((void*)&p->dest.type, sizeof(p->dest.type));
 //					send((void*)&p->dest.id, sizeof(p->dest.id));
 					result=send(data, shift);
+/*					printf("send ");
+					for(int i=0;i<shift;i++){
+						printf("%d,", data[i]);
+					} 
+					printf("\n");
+*/					
 					flag=0; 
 				setsockopt(sockfd, IPPROTO_TCP, TCP_NODELAY, (char *) &flag, sizeof(int));
 			unlockWrite();
@@ -125,11 +131,19 @@ namespace clasteredServer {
 		size=byteSwap(size);
 		size-=sizeof(char)+sizeof(int);
 		char* buf=(char*)malloc(size);
+		memset(buf, 0, size);
 		if (!buf){
 			return 0;
 		}else{
 			if (recv(buf, size)<=0)
 				return 0;
+			
+/*			printf("recv ");
+			for(int i=0;i<size;i++){
+				printf("%d,", buf[i]);
+			} 
+			printf("\n");
+*/
 			p->init(buf,size);
 			if (recv(&p->dest.type, sizeof(p->dest.type))<=0)
 				return 0;

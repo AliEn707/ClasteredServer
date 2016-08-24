@@ -243,6 +243,7 @@ void serverPacketProceed(server *s, packet *p){
 	if ((processor=messageprocessorServer(*((char*)buf)))==0){
 		//remove client data from the end
 		short size=packetGetSize(p);
+//		printf("got message size %d\n", size);
 		int _id=*((typeof(_id)*)(buf+(size-=sizeof(_id))));//check for write size size
 		char dir=*((typeof(dir)*)(buf+(size-=sizeof(dir))));
 		if (dir==MSG_CLIENT){ //redirect packet to client
@@ -255,6 +256,7 @@ void serverPacketProceed(server *s, packet *p){
 //			printf("redirect to server %d\n", _id);
 			server* sv=serversGet(_id);
 			packetSetSize(p, size);
+//			printf("set message size %d\n", size);
 			packetAddChar(p, MSG_SERVER);//message from server
 			packetAddNumber(p, s->id);
 			if (sv){

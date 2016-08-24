@@ -99,7 +99,7 @@ int main(int argc, char* argv[]){
 //				printf("n %d\n",n);
 				if (n){
 					n->m.lock();
-						printf("%d on %d from %d\n", n->id, world::id, n->gridOwner());
+//						printf("%d|%d on (%g,%g) from %d\n", n->id, world::id, h->position.x, n->position.y, n->gridOwner());
 						if (world::id==n->gridOwner())
 							n->move();
 					n->m.unlock();
@@ -142,12 +142,14 @@ int main(int argc, char* argv[]){
 						//i am not owner		
 						player *p;
 	//					printf("i'm not owner\n");
-						n->m.lock();
-							n->pack(1,1);
-							n->p.dest.id=oid;
-							world::sock->send(&n->p);
-						n->m.unlock();
-						if ((p=world::players[n->owner_id])!=0){
+						if (n->owner_id==0 || (p=world::players[n->owner_id])!=0){
+							n->m.lock();
+								n->pack(1,1);
+								n->p.dest.id=oid;
+								world::sock->send(&n->p);
+							n->m.unlock();
+						}
+						if (p){
 							p->move();
 						}
 					}

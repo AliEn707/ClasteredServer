@@ -114,15 +114,21 @@ namespace clasteredServerSlave{
 	void npc::update(packet * p){
 		for(unsigned i=1;i<p->chanks.size();i++){
 			int index=(int)p->chanks[i++].value.c;
+			if (p->chanks[i-1].type!=1)
+				printf("chank index type error, got %d\n", p->chanks[i-1].type);
 //			printf("index %d\n", index);
 			if (index>=0){
-				if (p->chanks[i].type<6){
-//					printf("sizeof chank %d\n",p->chanks[i].size());
-					void* data=p->chanks[i].data();
-					if (data)
-						memcpy(attr(index), p->chanks[i].data(), p->chanks[i].size());
-					else
-						printf("npc update corrupt chank on index %d %d\n", (int)index, i);
+				if (index<(int)attrs.size()){
+					if (p->chanks[i].type<6){
+//						printf("sizeof chank %d\n",p->chanks[i].size());
+						void* data=p->chanks[i].data();
+						if (data)
+							memcpy(attr(index), p->chanks[i].data(), p->chanks[i].size());
+						else//smth wrong with server>server proxy
+							printf("npc update corrupt chank on index %d %d\n", (int)index, i);
+					}
+				}else{
+					printf("got strange index %d\n", (int)index);
 				}
 			}else{
 				//special params
@@ -144,15 +150,15 @@ namespace clasteredServerSlave{
 						break;					
 					case -6:
 						bot.used=p->chanks[i].value.c;
-						printf("%d got bot used x %d\n", id, bot.used);
+//						printf("%d got bot used x %d\n", id, bot.used);
 						break;					
 					case -7:
 						bot.goal.x=p->chanks[i].value.f;
-						printf("%d got goal x %g\n",id, bot.goal.x);
+//						printf("%d got goal x %g\n",id, bot.goal.x);
 						break;					
-					case -8:
+					case -8://TODO:find why it prints 2 times
 						bot.goal.y=p->chanks[i].value.f;
-						printf("%d got goal y %g\n",id, bot.goal.y);
+//						printf("%d got goal y %g\n",id, bot.goal.y);
 						break;
 				}
 			}
@@ -193,8 +199,10 @@ namespace clasteredServerSlave{
 				_updated.pack.all=1;
 			} 
 			if (server){
-				p.add((char)-6);
-				p.add((char)bot.used);
+				if (all){
+					p.add((char)-6);
+					p.add((char)bot.used);
+				}
 				if (!bot.used){
 					for(int i=0;i<4;i++){
 						p.add((char)(-2-i));//-2 to -5
