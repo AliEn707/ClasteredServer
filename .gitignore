@@ -6,5 +6,7 @@
 src/other/generator
 /generator
 
+client/export/*
 *.out
 src/slave/thread.o
+client/export/.build

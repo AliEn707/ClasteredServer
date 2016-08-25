@@ -104,7 +104,7 @@ namespace clasteredServerSlave {
 				pl->npc->m.lock();
 					for(unsigned i=0;i<p->chanks.size();i+=2){
 						pl->npc->keys[(int)p->chanks[i].value.c]=p->chanks[i+1].value.c;
-						printf("key %d status %d\n", p->chanks[i].value.c, p->chanks[i+1].value.c);
+//						printf("key %d status %d\n", p->chanks[i].value.c, p->chanks[i+1].value.c);
 					}
 					pl->npc->set_dir();
 				pl->npc->m.unlock();
