@@ -122,7 +122,7 @@ class PlayState extends FlxState
 		
 		FlxG.camera.setScrollBoundsRect(LEVEL_MIN_X, LEVEL_MIN_Y,
 			LEVEL_MAX_X + Math.abs(LEVEL_MIN_X), LEVEL_MAX_Y + Math.abs(LEVEL_MIN_Y), true);
-		FlxG.camera.follow(orb, LOCKON, 1);
+		FlxG.camera.follow(orb, FlxCameraFollowStyle.NO_DEAD_ZONE);
 		drawDeadzone(); // now that deadzone is present
 		
 		hudCam = new FlxCamera(440, 0, hud.width, hud.height);
@@ -169,7 +169,7 @@ class PlayState extends FlxState
 		
 		var zoomDistDiffY;
 		var zoomDistDiffX;
-		
+/*		
 		if (zoom <= 1) 
 		{
 			zoomDistDiffX = Math.abs((LEVEL_MIN_X + LEVEL_MAX_X) - (LEVEL_MIN_X + LEVEL_MAX_X) / 1 + (1 - zoom));
@@ -184,14 +184,23 @@ class PlayState extends FlxState
 			zoomDistDiffX *= .5;
 			zoomDistDiffY *= .5;
 		}
+*/		
+		zoomDistDiffX = ((LEVEL_MAX_X + (LEVEL_MIN_X))*(zoom-1));
+		zoomDistDiffY = ((LEVEL_MAX_Y + (LEVEL_MIN_Y))*(zoom-1));
+		
+		if (zoom <= 1){
+			zoomDistDiffX *= -1;
+			zoomDistDiffY *= -1;
+		}
 		
 		FlxG.camera.setScrollBoundsRect(
-			LEVEL_MIN_X - zoomDistDiffX, 
-			LEVEL_MIN_Y - zoomDistDiffY,
-			LEVEL_MAX_X + Math.abs(LEVEL_MIN_X) + zoomDistDiffX * 2,
-			LEVEL_MAX_Y + Math.abs(LEVEL_MIN_Y) + zoomDistDiffY * 2,
+			LEVEL_MIN_X - zoomDistDiffX*0.5, 
+			LEVEL_MIN_Y - zoomDistDiffY*0.5,
+			LEVEL_MAX_X + Math.abs(LEVEL_MIN_X) + zoomDistDiffX,
+			LEVEL_MAX_Y + Math.abs(LEVEL_MIN_Y) + zoomDistDiffY,
 			false);
 		
+		FlxG.scaleMode.onMeasure(0,0);
 		hud.updateZoom(FlxG.camera.zoom);
 	}
 
@@ -228,11 +237,6 @@ class PlayState extends FlxState
 			orb.body.applyImpulse(new Vec2(speed, 0));
 		if (FlxG.keys.anyPressed([W, UP]))
 			orb.body.applyImpulse(new Vec2(0, -speed));
-			
-		if (FlxG.keys.justPressed.Y) 
-			setStyle(1);
-		if (FlxG.keys.justPressed.H) 
-			setStyle( -1);
 			
 		if (FlxG.keys.justPressed.U)
 			setLerp(.1);
@@ -276,20 +280,4 @@ class PlayState extends FlxState
 		hud.updateCamLerp(cam.followLerp);
 	}
 	
-	private function setStyle(i:Int) 
-	{	
-		var newCamStyleIndex:Int = Type.enumIndex(FlxG.camera.style) + i;
-		newCamStyleIndex < 0 ? newCamStyleIndex += 6 : newCamStyleIndex %= 6;
-		
-		var newCamStyle = Type.createEnumIndex(FlxCameraFollowStyle, newCamStyleIndex);
-		FlxG.camera.follow(orb, newCamStyle, FlxG.camera.followLerp);
-		drawDeadzone();
-		
-		hud.updateStyle(Std.string(FlxG.camera.style));
-		
-		if (FlxG.camera.style == SCREEN_BY_SCREEN)
-		{
-			setZoom(1);
-		}
-	}
 }

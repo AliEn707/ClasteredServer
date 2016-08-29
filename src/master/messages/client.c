@@ -114,11 +114,11 @@ static void *message1(client*cl, packet* p){
 					if (strcmp(buf,token)==0){//add normal token check
 						//auth ok
 						fclose(f);
-						packetInit(p);
+						packetInitFast(p);
 						packetAddNumber(p, (char)MSG_C_USER_INFO);
-						packetAddNumber(p, (char)2);
+						packetAddNumber(p, (char)1);
 						packetAddInt(p, cl->id);
-						packetAddString(p, cl->name);
+						//packetAddString(p, cl->name);
 						//add other params
 						clientMessagesAdd(cl, clientMessageNew(packetGetData(p), packetGetSize(p)));
 						printf("token OK\n");
