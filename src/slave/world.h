@@ -31,7 +31,12 @@ extern "C"{
 #define sqr(x) ({typeof(x) _x=x; _x*_x;})
 
 #ifdef __cplusplus
+
+	struct char2{
+		char x,y;
+	};
 }
+
 
 namespace clasteredServerSlave {
 

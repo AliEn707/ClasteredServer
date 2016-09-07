@@ -3,9 +3,9 @@ package clasteredServerClient;
 
 class Chank{
 	public var type:Int;
-	public var i:Int;
-	public var f:Float;
-	public var s:String;
+	public var i:Null<Int>=null;
+	public var f:Null<Float>=null;
+	public var s:Null<String>=null;
 	
 	public function new(id){
 		type=id;

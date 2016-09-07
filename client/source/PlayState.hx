@@ -1,5 +1,6 @@
 package;
 
+import clasteredServerClient.Packet;
 import flash.Lib;
 import flash.display.BlendMode;
 import flixel.FlxCamera;
@@ -26,12 +27,13 @@ class PlayState extends FlxState
 	static var LEVEL_MIN_Y;
 	static var LEVEL_MAX_Y;
 
-	private var orb:Orb;
+	private var orb:Npc;
 	private var orbShadow:FlxSprite;
 	private var hud:HUD;
 	private var hudCam:FlxCamera;
 	private var overlayCamera:FlxCamera;
 	private var deadzoneOverlay:FlxSprite;
+	private var keys:Array<Bool> = new Array<Bool>();
 
 	override public function create():Void 
 	{	
@@ -59,7 +61,7 @@ class PlayState extends FlxState
 		orbShadow.centerOffsets();
 		orbShadow.blend = BlendMode.MULTIPLY;
 		
-		orb = new Orb();
+		orb = new Npc(FlxG.width / 2, FlxG.height / 2, 1);
 		
 		add(orbShadow);
 		add(orb);
@@ -228,16 +230,94 @@ class PlayState extends FlxState
 	{	
 		super.update(elapsed);
 		
-		var speed = 20;
-		if (FlxG.keys.anyPressed([A, LEFT]))
-			orb.body.applyImpulse(new Vec2(-speed, 0));
-		if (FlxG.keys.anyPressed([S, DOWN]))
-			orb.body.applyImpulse(new Vec2(0, speed));
-		if (FlxG.keys.anyPressed([D, RIGHT]))
-			orb.body.applyImpulse(new Vec2(speed, 0));
-		if (FlxG.keys.anyPressed([W, UP]))
-			orb.body.applyImpulse(new Vec2(0, -speed));
-			
+//		trace(elapsed);
+//		trace(Sys.time());
+//		trace(orb.x,orb.y);
+		checkInput(elapsed);
+		checkPackets(elapsed);
+	}
+	
+	private function checkInput(elapsed:Float) {
+		var speed = 200;
+		var game:CSGame = cast FlxG.game;
+		var p:Packet = new Packet();
+		var keys_changed:Bool = false;
+		if (FlxG.keys.anyPressed([A, LEFT])){
+			orb.updater[0](orb.x - speed * elapsed);
+			if (!keys[0]){
+				keys[0] = true;
+				keys_changed = true;
+			}
+//			orb.x+=-speed*elapsed;
+		}else{
+			if (keys[0]){
+				keys[0] = false;
+				keys_changed = true;
+			}
+		}
+		
+		if (FlxG.keys.anyPressed([S, DOWN])){
+			orb.updater[1](orb.y + speed * elapsed);
+			if (!keys[3]){
+				keys[3] = true;
+				keys_changed = true;
+			}
+//			orb.y+=speed*elapsed;
+		}else{
+			if (keys[3]){
+				keys[3] = false;
+				keys_changed = true;
+			}
+		}
+		
+		if (FlxG.keys.anyPressed([D, RIGHT])){
+			orb.updater[0](orb.x + speed * elapsed);
+			if (!keys[2]){
+				keys[2] = true;
+				keys_changed = true;
+			}
+//			orb.x+=speed*elapsed;
+		}else{
+			if (keys[2]){
+				keys[2] = false;
+				keys_changed = true;
+			}
+		}
+		
+		if (FlxG.keys.anyPressed([W, UP])){
+			orb.updater[1](orb.y - speed * elapsed);
+			if (!keys[1]){
+				keys[1] = true;
+				keys_changed = true;
+			}
+//			orb.y+=-speed*elapsed;
+		}else{
+			if (keys[1]){
+				keys[1] = false;
+				keys_changed = true;
+			}
+		}
+		
+		if (keys_changed){
+			p.init();
+			p.type = 41;
+			p.addChar(0);
+			var val = 0;
+			if (keys[0]) 
+				val += -1;
+			if (keys[2])
+				val += 1;
+			p.addChar(val);
+			p.addChar(1);
+			val = 0;
+			if (keys[1]) 
+				val += -1;
+			if (keys[3])
+				val += 1;
+			p.addChar(val);
+			game.connection.sendPacket(p);
+		}
+		
 		if (FlxG.keys.justPressed.U)
 			setLerp(.1);
 		if (FlxG.keys.justPressed.J)
@@ -255,6 +335,45 @@ class PlayState extends FlxState
 			
 		if (FlxG.keys.justPressed.M)
 			FlxG.camera.shake();
+		
+	}
+	
+	private function checkPackets(elapsed:Float) {
+		var game:CSGame = cast FlxG.game;
+		var p:Null<Packet> = null;
+		do{
+			game.l.lock();
+				p = game.packets.pop();
+			game.l.unlock();
+			if (p!=null){
+				switch p.type {
+					case 40:
+						var n:Null<Npc> = game.npcs[p.chanks[0].i];
+						if (n == null){
+							game.npcs[p.chanks[0].i] = new Npc(0, 0, 0);
+							game.npcs[p.chanks[0].i].id = p.chanks[0].i;
+							add(game.npcs[p.chanks[0].i]);
+						}
+						n.update_attributes(p);
+					case 41:
+						var i:Int=0;
+						while(i<p.chanks.length-1){
+							switch p.chanks[i].i {
+								case 1:
+									game.npc_id=p.chanks[++i].i;
+									if (game.npcs[game.npc_id] == null){
+										game.npcs[game.npc_id] = new Npc(0, 0, 0);
+										game.npcs[game.npc_id].id = game.npc_id;
+										add(game.npcs[game.npc_id]);
+									}
+									game.npc = game.npcs[game.npc_id];
+									FlxG.camera.follow(game.npc, FlxCameraFollowStyle.NO_DEAD_ZONE);
+									i++;
+							}
+						}
+				}
+			}
+		}while (p != null);
 	}
 	
 	private function setLead(lead:Float) 

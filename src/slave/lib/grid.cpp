@@ -211,7 +211,7 @@ namespace clasteredServer {
 	int grid::to_grid(const int x, const int y){
 		int index=y*grid_size[0]+x;
 //		printf("on %d %d cell %d | %d\n",x,y,index, grid_size[0]*grid_size[1]);
-		return (index>0 && index<=grid_size[0]*grid_size[1])?index:0;
+		return (index>0 && index<grid_size[0]*grid_size[1])?index:0;
 	}
 
 

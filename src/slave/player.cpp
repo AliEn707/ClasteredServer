@@ -32,7 +32,7 @@ namespace clasteredServerSlave{
 			p.dest.type=CLIENT_MESSAGE;
 			p.dest.id=id;
 			p.setType(MSG_CLIENT_UPDATE);
-			p.add((char)1);
+			p.add((char)1);//index
 			p.add(npc->id);
 			world::sock->send(&p);
 		}

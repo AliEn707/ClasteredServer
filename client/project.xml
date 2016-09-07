@@ -84,6 +84,6 @@
 	<!--Place custom nodes like icons here (higher priority to override the HaxeFlixel icon)-->
 	<section unless="flash">
 		 <set name="use_locks"/>
-		 <set name="use_threads"/>
+		 <set name="use_threads" value="true" />
 	</section>
 </project>

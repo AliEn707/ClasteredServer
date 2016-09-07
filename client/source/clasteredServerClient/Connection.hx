@@ -22,8 +22,6 @@ class Connection{
 		p.type = 0;
 		p.addString("Haxe hello");
 		sendPacket(p);
-		trace(p);
-
 	}
 	
 	public function recvChar():Int{
@@ -100,7 +98,7 @@ class Connection{
 		var size:Int;
 		read.lock();
 			size = recvShort();
-			trace(size);
+//			trace(size);
 			p.size = size;
 			p.type = recvChar();
 			size--;
@@ -169,6 +167,12 @@ class Connection{
 		var password:String = Base64.encode(Md5.make(Bytes.ofString(Base64.decode(p.chanks[0].s).toString() + Md5.make(Bytes.ofString(pass)).toString())));//WTF salted pass
 		p.init();
 		p.type = 1;
+		p.addChar(2);
+		p.addString(password);
+		sendPacket(p);
+		
+		p.init();
+		p.type = 50;
 		p.addChar(2);
 		p.addString(password);
 		sendPacket(p);

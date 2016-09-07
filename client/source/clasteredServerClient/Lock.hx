@@ -14,7 +14,7 @@ import java.vm.Mutex;
  * @author ...
  */
 class Lock{
-	#if use_locks
+	#if !flash
 	private var m:Mutex=new Mutex();
 	#end
 	
@@ -23,13 +23,13 @@ class Lock{
 	}
 	
 	public function lock():Void{
-		#if use_locks
+		#if !flash
 			m.acquire();
 		#end
 	}
 	
 	public function unlock():Void{
-		#if use_locks
+		#if !flash
 			m.release();
 		#end
 	}

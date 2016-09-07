@@ -2,6 +2,7 @@ package;
 import haxe.CallStack;
 
 import clasteredServerClient.Connection;
+import clasteredServerClient.Connector;
 import clasteredServerClient.Packet;
 import flixel.FlxGame;
 import openfl.display.Sprite;
@@ -15,9 +16,9 @@ class Main extends Sprite
 	public function new()
 	{
 		super();
-		addChild(new FlxGame(640, 480, PlayState));
+		addChild(new CSGame(640, 480, PlayState));
 		
-		FlxG.fixedTimestep = false;
+		//FlxG.fixedTimestep = false;
 		FlxG.scaleMode = new BorderedStageSizeScaleMode(1024,768);
 		//read config and setup
 	#if desktop
@@ -25,14 +26,17 @@ class Main extends Sprite
 		FlxG.resizeWindow(800, 600);
 //		FlxG.camera.setSize(800, 600);
 	#end
-		trace("sfdsfsds");
 		//FlxG.fullscreen = true;
-		try {
-			var c:Connection = new Connection("172.16.1.40", 8000);
-			trace("sfdsfsds");
-			trace(c.auth("qwer","qwer"));
-    	} catch( msg : String ) {
-			trace("Произошла ошибка: " + msg);
+		var game:CSGame = cast FlxG.game;
+		try{
+			var conn = new Connection("172.16.1.40", 8000);
+			game.id = conn.auth("qwer", "qwer");
+			trace(game.id);
+			game.connection = conn;
+			game.connector = true;
+			game.c = new Connector();
+		}catch(e:Dynamic){
+			trace(e);
 			trace(CallStack.toString(CallStack.exceptionStack()));
 		}
 	}

@@ -1,5 +1,10 @@
 package clasteredServerClient;
 
+import haxe.CallStack;
+
+import flixel.FlxG;
+import flixel.FlxCamera;
+
 #if cpp
 import cpp.vm.Thread;
 #elseif neko
@@ -14,23 +19,37 @@ import java.vm.Thread;
  * @author ...
  */
 class Connector{
-	#if use_threads
+#if flash
+	
+#else
 	private var t:Thread;
-	#end
+
+	public function new(){
+		this.t = Thread.create(connector);
+		this.t.sendMessage(Thread.current());
+	}
 	
 	private function connector(){
 		var main:Thread = Thread.readMessage(true);
-		var c:Connection = Thread.readMessage(true);
-		while(true){
-			
+		var game:CSGame = cast FlxG.game;
+		trace("connector started");
+		if (game.connection != null){
+			try{
+				while (game.connector){
+					var p:Packet = game.connection.recvPacket();
+//					trace(p);
+					game.l.lock();
+						game.packets.push(p);
+					game.l.unlock();
+				}
+			}catch(e:Dynamic){
+				trace(e);
+				trace(CallStack.toString(CallStack.exceptionStack()));
+			}
 		}
+		game.connection_lost();
 	}
 	
-	public function new(c:Connection){
-		this.t = Thread.create(connector);
-		this.t.sendMessage(Thread.current());
-		this.t.sendMessage(c);
-	}
-	
+#end
 	
 }

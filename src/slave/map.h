@@ -29,9 +29,9 @@ namespace clasteredServerSlave {
 
 	class map {
 		public:
-			pointf source;
-			pointf size;
-			pointf cell;
+			point source;
+			point size;
+			point cell;
 			clasteredServerSlave::cell* grid;
 			
 			map();

@@ -11,14 +11,6 @@ using namespace clasteredServer;
 
 namespace clasteredServerSlave{
 
-	void normalize(pointf* p){
-		float l=sqrtf(sqr(p->x)+sqr(p->y));
-		if (l>0){
-			p->x/=l;
-			p->y/=l;
-		}
-	}
-	
 	npc::npc(int _id, int slave){
 		id=_id;
 		slave_id=slave?:world::id;
@@ -39,13 +31,14 @@ namespace clasteredServerSlave{
 		}
 		timestamp=time(0);
 		///
-		vel=1;
+		vel=10;
 	}
 	
 	npc::~npc(){
-		player*p=world::players[owner_id];
+		player *p=world::players[owner_id];
 		if (p)
 			p->npc=0;
+		//add returning of id
 	}
 		
 	bool npc::clear(){
@@ -93,14 +86,14 @@ namespace clasteredServerSlave{
 		if (bot.used)
 			set_dir(bot.goal.x-position.x, bot.goal.y-position.y);
 		else
-			set_dir(keys[2]-keys[0], keys[3]-keys[1]);
+			set_dir(keys[0], keys[1]);
 	}
 
 	void npc::set_dir(float x, float y){
 		direction.x=x;
 		direction.y=y;
 		timestamp=time(0);
-		normalize(&direction);
+		direction.normalize();
 	}
 	
 	int npc::attr(void *attr){

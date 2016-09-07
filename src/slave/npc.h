@@ -5,6 +5,7 @@
 #include <vector>
 #include "lib/mutex.h"
 #include "lib/packet.h"
+#include "point.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -18,27 +19,17 @@ extern "C"{
 
 namespace clasteredServerSlave {
 
-	struct pointf{
-		float x,y;
-	};
-	
-	struct pointi{
-		int x,y;
-	};
-	
 	struct bot{
 		bool used;
-		pointf goal;
+		point goal;
 	};
-	
-	void normalize(pointf*);
 
 	class npc {
 		public:
 			short state;
 			int id;
 			bool alive;
-			pointf position;
+			point position;
 			short health;
 			clasteredServer::packet p;
 			clasteredServer::mutex m;
@@ -51,7 +42,7 @@ namespace clasteredServerSlave {
 					bool server;
 				} pack;
 			} _updated;
-			char keys[4]; //l,t,r,b
+			char keys[4]; //x,y l-r+t-b+		l,t,r,b
 			clasteredServerSlave::bot bot;
 			clasteredServer::mutex access;
 			std::vector<bool> attrs; //attributes flags
@@ -75,7 +66,7 @@ namespace clasteredServerSlave {
 		private:
 			float vel;
 			time_t timestamp;
-			pointf direction;
+			point direction;
 			std::vector<void*> attr_shift;
 			std::map<void*, int> shift_attr;			
 	};

@@ -1,6 +1,6 @@
 GCC ?= gcc
 CFLAGS= -Wall -fsigned-char -fgnu89-inline 
-CPPFLAGS= -Wall -fsigned-char 
+CPPFLAGS= -Wall -fsigned-char -std=gnu++0x
 LDFLAGS= -pthread -lpthread -lm -lstdc++
 SRC=src
 SHARE_SOURCES:=$(wildcard $(SRC)/share/*.c) $(wildcard $(SRC)/share/*/*.c) $(wildcard $(SRC)/share/*/*/*.c)
