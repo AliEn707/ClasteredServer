@@ -46,8 +46,8 @@ namespace clasteredServerSlave{
 			return 1;
 		}
 			
-		for(std::vector<bool>::iterator it = attrs.begin(), end = attrs.end();it != end; ++it){
-			*it=0;
+		for(unsigned i=0;i<attrs.size();i++){
+			attrs[i]=0;
 		}
 		_updated.pack.done=0;
 		_updated.pack.all=0;
@@ -91,7 +91,9 @@ namespace clasteredServerSlave{
 
 	void npc::set_dir(float x, float y){
 		direction.x=x;
+		attrs[attr(&direction.x)]=1;
 		direction.y=y;
+		attrs[attr(&direction.y)]=1;
 		timestamp=time(0);
 		direction.normalize();
 	}
@@ -160,10 +162,11 @@ namespace clasteredServerSlave{
 	}
 	
 	bool npc::updated(){
-		for(unsigned i;i<attrs.size();i++)
+		for(unsigned i=0;i<attrs.size();i++){
 			if (attrs[i]){
 				return 1;
 			}
+		}
 		return 0;
 	}
 	
@@ -232,6 +235,7 @@ namespace clasteredServerSlave{
 		n->bot.goal.y=n->position.y+n->direction.y*n->vel;
 		n->bot.used=1;
 		withLock(world::m, world::npcs[n->id]=n);
+		printf("added bot %d\n", n->id);
 		return n->id;
 	}
 	

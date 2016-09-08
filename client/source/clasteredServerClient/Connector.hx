@@ -41,6 +41,7 @@ class Connector{
 					game.l.lock();
 						game.packets.push(p);
 					game.l.unlock();
+//					trace("loop");
 				}
 			}catch(e:Dynamic){
 				trace(e);
@@ -48,6 +49,7 @@ class Connector{
 			}
 		}
 		game.connection_lost();
+		trace("connector exited");
 	}
 	
 #end

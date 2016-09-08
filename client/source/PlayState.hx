@@ -57,16 +57,16 @@ class PlayState extends FlxState
 		add(new FlxSprite(-FlxG.width / 2, -FlxG.height / 2, "assets/Border.png"));
 		
 		// Player orb
-		orbShadow = new FlxSprite(FlxG.width / 2, FlxG.height / 2, "assets/OrbShadow.png");
-		orbShadow.centerOffsets();
-		orbShadow.blend = BlendMode.MULTIPLY;
+		//orbShadow = new FlxSprite(FlxG.width / 2, FlxG.height / 2, "assets/OrbShadow.png");
+		//orbShadow.centerOffsets();
+		//orbShadow.blend = BlendMode.MULTIPLY;
 		
-		orb = new Npc(FlxG.width / 2, FlxG.height / 2, 1);
+		//orb = new Npc(FlxG.width / 2, FlxG.height / 2, 1);
 		
-		add(orbShadow);
-		add(orb);
+		//add(orbShadow);
+		//add(orb);
 		
-		orb.shadow = orbShadow;
+		//orb.shadow = orbShadow;
 		
 		// Other orbs
 		for (i in 0...5) 
@@ -124,7 +124,7 @@ class PlayState extends FlxState
 		
 		FlxG.camera.setScrollBoundsRect(LEVEL_MIN_X, LEVEL_MIN_Y,
 			LEVEL_MAX_X + Math.abs(LEVEL_MIN_X), LEVEL_MAX_Y + Math.abs(LEVEL_MIN_Y), true);
-		FlxG.camera.follow(orb, FlxCameraFollowStyle.NO_DEAD_ZONE);
+		//FlxG.camera.follow(orb, FlxCameraFollowStyle.NO_DEAD_ZONE);
 		drawDeadzone(); // now that deadzone is present
 		
 		hudCam = new FlxCamera(440, 0, hud.width, hud.height);
@@ -240,10 +240,9 @@ class PlayState extends FlxState
 	private function checkInput(elapsed:Float) {
 		var speed = 200;
 		var game:CSGame = cast FlxG.game;
-		var p:Packet = new Packet();
 		var keys_changed:Bool = false;
 		if (FlxG.keys.anyPressed([A, LEFT])){
-			orb.updater[0](orb.x - speed * elapsed);
+//			orb.updater[0](orb.x - speed * elapsed);
 			if (!keys[0]){
 				keys[0] = true;
 				keys_changed = true;
@@ -257,7 +256,7 @@ class PlayState extends FlxState
 		}
 		
 		if (FlxG.keys.anyPressed([S, DOWN])){
-			orb.updater[1](orb.y + speed * elapsed);
+//			orb.updater[1](orb.y + speed * elapsed);
 			if (!keys[3]){
 				keys[3] = true;
 				keys_changed = true;
@@ -271,7 +270,7 @@ class PlayState extends FlxState
 		}
 		
 		if (FlxG.keys.anyPressed([D, RIGHT])){
-			orb.updater[0](orb.x + speed * elapsed);
+//			orb.updater[0](orb.x + speed * elapsed);
 			if (!keys[2]){
 				keys[2] = true;
 				keys_changed = true;
@@ -284,14 +283,16 @@ class PlayState extends FlxState
 			}
 		}
 		
-		if (FlxG.keys.anyPressed([W, UP])){
-			orb.updater[1](orb.y - speed * elapsed);
+		
+		if (FlxG.keys.anyJustPressed([W, UP])){
+//			orb.updater[1](orb.y - speed * elapsed);
 			if (!keys[1]){
 				keys[1] = true;
 				keys_changed = true;
 			}
 //			orb.y+=-speed*elapsed;
-		}else{
+		}
+		if (FlxG.keys.anyJustReleased([W, UP])){
 			if (keys[1]){
 				keys[1] = false;
 				keys_changed = true;
@@ -299,7 +300,7 @@ class PlayState extends FlxState
 		}
 		
 		if (keys_changed){
-			p.init();
+			var p:Packet = new Packet();
 			p.type = 41;
 			p.addChar(0);
 			var val = 0;
@@ -316,6 +317,7 @@ class PlayState extends FlxState
 				val += 1;
 			p.addChar(val);
 			game.connection.sendPacket(p);
+//			trace("sended");
 		}
 		
 		if (FlxG.keys.justPressed.U)
@@ -350,9 +352,10 @@ class PlayState extends FlxState
 					case 40:
 						var n:Null<Npc> = game.npcs[p.chanks[0].i];
 						if (n == null){
-							game.npcs[p.chanks[0].i] = new Npc(0, 0, 0);
-							game.npcs[p.chanks[0].i].id = p.chanks[0].i;
-							add(game.npcs[p.chanks[0].i]);
+							n = new Npc(0, 0, 0);
+							n.id = p.chanks[0].i;
+							game.npcs[p.chanks[0].i] = n;
+							add(n);
 						}
 						n.update_attributes(p);
 					case 41:

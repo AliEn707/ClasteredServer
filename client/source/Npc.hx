@@ -19,7 +19,7 @@ class Npc extends FlxSprite
 	public var dest_y:Null<Int> = 0;
 	public var dir_x:Null<Int> = 0;
 	public var dir_y:Null<Int> = 0;
-	public var updater:Array<Null<Dynamic->Void>>=[];
+	public var updater:Map<Int, Null<Dynamic->Void>>=new Map<Int, Null<Dynamic->Void>>();
 	
 	public var shadow:Null<FlxSprite> = null;
 	

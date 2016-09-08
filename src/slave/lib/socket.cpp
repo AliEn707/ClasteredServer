@@ -40,6 +40,7 @@ namespace clasteredServer {
 		int need=size;
 		int get;
 		get=::send(sockfd,buf,need,MSG_NOSIGNAL);
+//		printf("sended %d\n", get);
 		if (get<=0)
 			return get;
 		if (get==need)

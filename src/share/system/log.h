@@ -15,4 +15,5 @@ void printLog(const char* format, ...);
 #define printf printLog
 
 #define perror(str) printLog("%s at %s <%s:%d>\n",str,__FUNCTION__,__FILE__,__LINE__)
+
 #endif

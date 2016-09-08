@@ -12,7 +12,7 @@ using namespace clasteredServerSlave;
 
 static void* threadFunc(void *arg){
 	packet p;
-	int bots=0;
+	int bots=4;
 	
 	world::sock->recv(&p);
 	world::id=p.chanks[0].value.i;
@@ -54,7 +54,7 @@ static void* threadFunc(void *arg){
 		processor f;
 		if (world::sock->recv(&p)<=0)
 			break;
-//		printf("packet %d\n", p.type());
+		printf("packet %d\n", p.type());
 		//some work
 		if((f=processors::messages[p.type()])!=0)
 			f(&p);

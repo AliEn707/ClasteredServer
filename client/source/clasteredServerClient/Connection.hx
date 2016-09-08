@@ -3,6 +3,8 @@ package clasteredServerClient;
 
 import clasteredServerClient.Packet.Chank;
 import haxe.io.Bytes;
+import haxe.io.BytesBuffer;
+import haxe.io.BytesOutput;
 import sys.net.Socket;
 import sys.net.Host;
 import haxe.crypto.Md5;
@@ -14,11 +16,13 @@ class Connection{
 	public var read:Lock = new Lock();
 	
 	public function new(host:String, port:Int){
-		var p:Packet=new Packet();
+		var p:Packet = new Packet();
+//		sock.setBlocking(true);
+//		sock.setTimeout(100000);
 		sock.connect(new Host(host), port);
 		sock.input.bigEndian=false;
 		sock.output.bigEndian = false;
-//		sock.setFastSend=true;
+		sock.setFastSend(true);
 		p.type = 0;
 		p.addString("Haxe hello");
 		sendPacket(p);
@@ -84,12 +88,11 @@ class Connection{
 	}
 
 	public function sendBytes(s:Bytes):Void{
-		sendShort(s.length);
 		sock.output.write(s);
 	}
 
 	public function sendString(s:String):Void{
-		sendShort(s.length);
+		sock.output.writeInt16(s.length);
 		sock.output.writeString(s);
 	}
 
@@ -98,7 +101,7 @@ class Connection{
 		var size:Int;
 		read.lock();
 			size = recvShort();
-//			trace(size);
+//			trace("size",size);
 			p.size = size;
 			p.type = recvChar();
 			size--;
@@ -135,28 +138,41 @@ class Connection{
 	}
 
 	public function sendPacket(p:Packet):Void{
-		write.lock();
-			sendShort(p.size+2);
-			sendChar(p.type);
-			sendChar(p.chanks.length>125 ? -1 : p.chanks.length);
-			for (c in p.chanks){
-				sendChar(c.type);
+		var buf:BytesOutput = new BytesOutput();
+		buf.bigEndian = false;
+		buf.writeInt16(p.size+2);
+		buf.writeInt8(p.type);
+		buf.writeInt8(p.chanks.length>125 ? -1 : p.chanks.length);
+		for (c in p.chanks){
+			if (c.type>0 && c.type<7){
+				buf.writeInt8(c.type);
 				switch c.type {
-					case 1: sendChar(c.i);
-					case 2: sendShort(c.i);
-					case 3: sendInt(c.i);
-					case 4: sendFloat(c.f);
-					case 5: sendDouble(c.f);
-					case 6: sendString(c.s);
-					default: trace("wrong chank");
+					case 1: 
+						buf.writeInt8(c.i);
+					case 2: 
+						buf.writeInt16(c.i);
+					case 3: 
+						buf.writeInt32(c.i);
+					case 4: 
+						buf.writeFloat(c.f);
+					case 5: 
+						buf.writeDouble(c.f);
+					case 6: 
+						buf.writeInt16(c.s.length);
+						buf.writeString(c.s);
+//					default: trace("wrong chank");
 				}
 			}
+		}
+		write.lock();
+			sendBytes(buf.getBytes());
 		write.unlock();		
 	}
 	
 	public function auth(login:String, pass:String):Int{
 		var p:Packet;
 		p = recvPacket();
+		trace(p);
 		p.init();
 		p.type = 1;
 		p.addChar(1);//first stage
@@ -164,6 +180,7 @@ class Connection{
 		sendPacket(p);
 		
 		p = recvPacket();
+		trace(p);
 		var password:String = Base64.encode(Md5.make(Bytes.ofString(Base64.decode(p.chanks[0].s).toString() + Md5.make(Bytes.ofString(pass)).toString())));//WTF salted pass
 		p.init();
 		p.type = 1;
@@ -178,6 +195,7 @@ class Connection{
 		sendPacket(p);
 		
 		p = recvPacket();//chank 0- id(Int)
+		trace(p);
 		return p.chanks[0].i;
 	}
 }

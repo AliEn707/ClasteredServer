@@ -154,8 +154,15 @@ int socketRecv(socket_t *sock, void * buf, int size){
 			need-=got;
 //		printf("try to get\n");
 		if((got=recv(sock->sockfd,buf+(size-need),need,MSG_DONTWAIT))<=0)
-			if (errno!=EAGAIN)
+#ifdef __CYGWIN__
+		if (errno!=EAGAIN && errno!=0){
+#else
+		if (errno!=EAGAIN){
+#endif			
+				printf("%d\n", errno);
+				perror(strerror(errno));
 				return -1;
+			}
 //		printf("got %d\n", got);
 		usleep(RECV_SLEEP_TIME);
 		$_$++;

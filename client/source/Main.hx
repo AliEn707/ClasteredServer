@@ -29,7 +29,7 @@ class Main extends Sprite
 		//FlxG.fullscreen = true;
 		var game:CSGame = cast FlxG.game;
 		try{
-			var conn = new Connection("172.16.1.40", 8000);
+			var conn = new Connection("localhost", 8000);
 			game.id = conn.auth("qwer", "qwer");
 			trace(game.id);
 			game.connection = conn;

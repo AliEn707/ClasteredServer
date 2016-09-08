@@ -58,8 +58,9 @@ int main(int argc, char* argv[]){
 	//sigaction(SIGSEGV, &sa, NULL);	
 	sigaction(SIGINT, &sa, NULL);	
 	sigaction(SIGTERM, &sa, NULL);		
+#ifndef __CYGWIN__
 	signal(SIGSEGV, segfault_sigaction);
-	
+#endif	
 	if (argc>1)
 		sscanf(argv[1], "%d", &port);
 	
@@ -99,9 +100,10 @@ int main(int argc, char* argv[]){
 //				printf("n %d\n",n);
 				if (n){
 					n->m.lock();
-//						printf("%d|%d on (%g,%g) from %d\n", n->id, world::id, h->position.x, n->position.y, n->gridOwner());
-						if (world::id==n->gridOwner())
+//						printf("%d|%d on (%g,%g) from %d\n", n->id, world::id, n->position.x, n->position.y, n->gridOwner());
+						if (world::id==n->gridOwner()){
 							n->move();
+						}
 					n->m.unlock();
 				}
 			}
@@ -109,8 +111,9 @@ int main(int argc, char* argv[]){
 		//send data to players
 		world::m.lock();
 			for(std::map<int, player*>::iterator it = world::players.begin(), end = world::players.end();it != end; ++it){
-				if (it->second)
+				if (it->second){
 					it->second->sendUpdates();
+				}
 			}		
 		world::m.unlock();
 		//check areas
