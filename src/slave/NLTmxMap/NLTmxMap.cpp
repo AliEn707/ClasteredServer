@@ -142,7 +142,23 @@ NLTmxMap* NLLoadTmxMap( char *xml )
 					if (xy.size()==2){
 						NLTmxMapPoint p(atoi(xy[0].c_str()),atoi(xy[1].c_str()));
 	//					std::cout << "x " << p.x << " y " << p.y <<"\n";
-						object->polygon.points.push_back(p);
+						object->points.push_back(p);
+					}
+				}
+				object->points.push_back(object->points[0]);//create loop
+            }
+			
+            xml_node<> *polylinenode = objectnode->first_node( "polyline" );
+            
+            if ( polylinenode ) {
+				auto pointsattr = polylinenode->first_attribute( "points" );
+				std::vector<string> points=split(pointsattr->value(), [](int i)->int{return i==' ';});
+				for (auto point : points){
+					std::vector<string> xy=split(point, [](int i)->int{return i==',';});
+					if (xy.size()==2){
+						NLTmxMapPoint p(atoi(xy[0].c_str()),atoi(xy[1].c_str()));
+	//					std::cout << "x " << p.x << " y " << p.y <<"\n";
+						object->points.push_back(p);
 					}
 				}
             }

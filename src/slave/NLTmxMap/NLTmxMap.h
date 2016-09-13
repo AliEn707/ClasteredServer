@@ -41,11 +41,6 @@ struct NLTmxMapPoint {
 	int x,y;
 };
 
-struct NLTmxMapPolygon {
-    vector<NLTmxMapPoint> points;
-};
-
-
 class NLTmxMapObject {
 public:
     string name;
@@ -55,7 +50,7 @@ public:
     int width;
     int height;
     vector<NLTmxMapObjectProperty*> properties;
-	NLTmxMapPolygon polygon;
+	vector<NLTmxMapPoint> points; //line from 0 to size()-1
 
 public:
     

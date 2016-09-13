@@ -53,6 +53,8 @@ namespace clasteredServerSlave{
 		if (xml){
 			NLTmxMap* map = NLLoadTmxMap( xml );
 			//fill data
+			world::map_size[0]=map->tileWidth*map->width;
+			world::map_size[1]=map->tileHeight*map->height;
 			delete map;
 			free(xml);
 		}
