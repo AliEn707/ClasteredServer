@@ -1,3 +1,4 @@
+#include <cstdio>
 #include <math.h>
 
 #include "world.h"
@@ -28,3 +29,15 @@ namespace clasteredServerSlave {
 	}
 
 }
+
+/*
+using namespace clasteredServerSlave;
+int main(){
+	point p(0,0);
+	point p1(5,5);
+	point p2(0,5);
+	segment s(p,p1);
+	printf("dist %g\n", p.distanse(p1));
+	printf("dist %g\n", s.distanse(p2));
+}
+*/

@@ -1,10 +1,25 @@
 #include "RapidXML/rapidxml.hpp"
 #include <iostream>
+#include <algorithm>
 #include "NLTmxMap.h"
 
 
 
 using namespace rapidxml;
+
+std::vector<string> split(const string& str, int delimiter(int) = ::isspace){
+  std::vector<string> result;
+  auto e=str.end();
+  auto i=str.begin();
+  while(i!=e){
+    i=find_if_not(i,e, delimiter);
+    if(i==e) break;
+    auto j=find_if(i,e, delimiter);
+    result.push_back(string(i,j));
+    i=j;
+  }
+  return result;
+}
 
 
 NLTmxMap* NLLoadTmxMap( char *xml )
@@ -81,9 +96,7 @@ NLTmxMap* NLLoadTmxMap( char *xml )
         NLTmxMapObjectGroup* group = new NLTmxMapObjectGroup();
         
         group->name = objectgroupnode->first_attribute( "name" )->value();
-        group->width = atoi( objectgroupnode->first_attribute( "width" )->value() );
-        group->height = atoi( objectgroupnode->first_attribute( "height" )->value() );
-        
+
         xml_attribute<> *visibleattr = objectgroupnode->first_attribute( "visible" );
         if ( visibleattr ) {
             group->visible = atoi( visibleattr->value() );
@@ -119,7 +132,22 @@ NLTmxMap* NLLoadTmxMap( char *xml )
                 object->height = atoi( heightattr->value() );
             }
             
-            xml_node<> *propertiesnode = objectnode->first_node( "properties" );
+            xml_node<> *polygonnode = objectnode->first_node( "polygon" );
+            
+            if ( polygonnode ) {
+				auto pointsattr = polygonnode->first_attribute( "points" );
+				std::vector<string> points=split(pointsattr->value(), [](int i)->int{return i==' ';});
+				for (auto point : points){
+					std::vector<string> xy=split(point, [](int i)->int{return i==',';});
+					if (xy.size()==2){
+						NLTmxMapPoint p(atoi(xy[0].c_str()),atoi(xy[1].c_str()));
+	//					std::cout << "x " << p.x << " y " << p.y <<"\n";
+						object->polygon.points.push_back(p);
+					}
+				}
+            }
+			
+			xml_node<> *propertiesnode = objectnode->first_node( "properties" );
             
             if ( propertiesnode ) {
                 

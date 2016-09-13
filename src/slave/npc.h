@@ -28,6 +28,7 @@ namespace clasteredServerSlave {
 		public:
 			short state;
 			int id;
+			int d;
 			bool alive;
 			point position;
 			short health;
@@ -69,6 +70,8 @@ namespace clasteredServerSlave {
 			point direction;
 			std::vector<void*> attr_shift;
 			std::map<void*, int> shift_attr;			
+			
+			bool check_point(typeof(point::x) x, typeof(point::y) y);
 	};
 }
 

@@ -30,8 +30,12 @@ namespace clasteredServerSlave{
 			attrs.push_back(0);
 		}
 		timestamp=time(0);
+		position.x=10;
+		position.y=10;
+		//TODO: add spawn position check
 		///
 		vel=10;
+		d=5;
 	}
 	
 	npc::~npc(){
@@ -61,20 +65,16 @@ namespace clasteredServerSlave{
 	}
 	
 	void npc::move(float x, float y){
-		position.x+=x;
-		attrs[attr(&position.x)]=1;
-		if (position.x<0)
-			bot.goal.x=position.x=0;
-		if (position.x>=world::map_size[0])
-			bot.goal.x=position.x=world::map_size[0]-1;
-		position.y+=y;
-		attrs[attr(&position.y)]=1;
-		if (position.y<0)
-			bot.goal.y=position.y=0;
-		if (position.y>=world::map_size[1])
-			bot.goal.y=position.y=world::map_size[1]-1;
+		if (check_point(position.x+x,position.y)){
+			position.x+=x;
+			attrs[attr(&position.x)]=1;
+		}
+		if (check_point(position.x,position.y+y)){
+			position.y+=y;
+			attrs[attr(&position.y)]=1;
+		}
 		if (bot.used){
-			if (sqr(position.x-bot.goal.x)+sqr(position.y-bot.goal.y)<=2*vel){
+			if (position.distanse2(bot.goal)<=3*vel){
 				bot.goal.x=(rand()%((int)world::map_size[0]*100))/100.0;
 				bot.goal.y=(rand()%((int)world::map_size[1]*100))/100.0;
 				set_dir();
@@ -239,4 +239,16 @@ namespace clasteredServerSlave{
 		return n->id;
 	}
 	
+	bool npc::check_point(typeof(point::x) x, typeof(point::y) y){
+		point p(x,y);
+		//printf("segments %d \n", world::map.segments.size());
+		for(int i=0,end=world::map.segments.size();i<end;i++){//TODO: change to check by map grid
+			segment *s=world::map.segments[i];
+			if(s->distanse(p)<=d){
+				//printf("dist \n");
+				return 0;
+			}
+		}
+		return 1;
+	}
 }

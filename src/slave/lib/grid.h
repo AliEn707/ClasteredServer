@@ -26,6 +26,7 @@ namespace clasteredServer {
 
 	class grid {
 		public:
+			float cell[2]; //size of cell in units
 			std::map<int, server> servers;
 
 			grid(float s[2], float o);
@@ -38,8 +39,7 @@ namespace clasteredServer {
 		private:
 			int id;
 			float offset;
-			float cell[2]; //size of cell in units
-			float size[2]; //size of map in units
+			float size[2]; //size of grid in units
 			int grid_size[2]; //size of grid in cells
 			data_cell** data; //grid
 			std::vector<int> server_ids; //ids of server, sorted

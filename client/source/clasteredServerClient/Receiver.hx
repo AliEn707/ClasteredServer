@@ -18,24 +18,24 @@ import java.vm.Thread;
  * ...
  * @author ...
  */
-class Connector{
+class Receiver{
 #if flash
 	
 #else
 	private var t:Thread;
 
 	public function new(){
-		this.t = Thread.create(connector);
+		this.t = Thread.create(thread);
 		this.t.sendMessage(Thread.current());
 	}
 	
-	private function connector(){
+	private function thread(){
 		var main:Thread = Thread.readMessage(true);
 		var game:CSGame = cast FlxG.game;
-		trace("connector started");
+		trace("receiver started");
 		if (game.connection != null){
 			try{
-				while (game.connector){
+				while (game.recv_loop){
 					var p:Packet = game.connection.recvPacket();
 //					trace(p);
 					game.l.lock();
@@ -49,7 +49,7 @@ class Connector{
 			}
 		}
 		game.connection_lost();
-		trace("connector exited");
+		trace("receiver exited");
 	}
 	
 #end

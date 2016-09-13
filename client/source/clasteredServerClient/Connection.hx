@@ -172,7 +172,7 @@ class Connection{
 	public function auth(login:String, pass:String):Int{
 		var p:Packet;
 		p = recvPacket();
-		trace(p);
+//		trace(p);
 		p.init();
 		p.type = 1;
 		p.addChar(1);//first stage
@@ -180,7 +180,7 @@ class Connection{
 		sendPacket(p);
 		
 		p = recvPacket();
-		trace(p);
+//		trace(p);
 		var password:String = Base64.encode(Md5.make(Bytes.ofString(Base64.decode(p.chanks[0].s).toString() + Md5.make(Bytes.ofString(pass)).toString())));//WTF salted pass
 		p.init();
 		p.type = 1;
@@ -195,7 +195,7 @@ class Connection{
 		sendPacket(p);
 		
 		p = recvPacket();//chank 0- id(Int)
-		trace(p);
+//		trace(p);
 		return p.chanks[0].i;
 	}
 }

@@ -10,8 +10,8 @@ class CSGame extends FlxGame
 	
 	public var l:Lock = new Lock();
 	public var connection:Null<Connection> = null;
-	public var connector:Bool = true;
-	public var c:Null<Connector> = null;
+	public var recv_loop:Bool = true;
+	public var receiver:Null<Receiver> = null;
 	public var packets:Array<Packet> = new Array<Packet>();
 	
 	public function connection_lost(){

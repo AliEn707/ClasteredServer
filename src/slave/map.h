@@ -8,6 +8,7 @@
 #include "lib/grid.h"
 #include "npc.h"
 #include "player.h"
+#include "segment.h"
 
 #ifdef __cplusplus
 extern "C"{
@@ -22,7 +23,7 @@ namespace clasteredServerSlave {
 	struct cell{
 		int id;
 		std::vector<npc*> npcs;
-		
+		std::vector<segment*> segments;
 		npc* getNpc(int id);
 		void addNpc(npc *n);
 	};
@@ -30,15 +31,21 @@ namespace clasteredServerSlave {
 	class map {
 		public:
 			point source;
-			point size;
+			pointi size;
 			point cell;
-			clasteredServerSlave::cell* grid;
+			clasteredServerSlave::cell *grid=0;
+			std::vector<segment*> segments;
 			
-			map();
+			map(int x, int y);
 			~map();
 			clasteredServerSlave::cell* cells(int id);
 			clasteredServerSlave::cell* cells(float x, float y);
+			clasteredServerSlave::cell* cells(point &p);
+			int to_grid(float x, float y);
 			void reconfigure();
+			
+		private:
+			void clean_segments();
 	};
 }
 

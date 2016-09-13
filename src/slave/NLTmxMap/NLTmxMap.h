@@ -36,6 +36,15 @@ struct NLTmxMapObjectProperty {
     string value;
 };
 
+struct NLTmxMapPoint {
+	NLTmxMapPoint(int _x,int _y){x=_x;y=_y;}
+	int x,y;
+};
+
+struct NLTmxMapPolygon {
+    vector<NLTmxMapPoint> points;
+};
+
 
 class NLTmxMapObject {
 public:
@@ -46,7 +55,8 @@ public:
     int width;
     int height;
     vector<NLTmxMapObjectProperty*> properties;
-    
+	NLTmxMapPolygon polygon;
+
 public:
     
     ~NLTmxMapObject() {

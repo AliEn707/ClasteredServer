@@ -15,13 +15,13 @@ using namespace clasteredServer;
 namespace clasteredServerSlave {
 	
 	int world::id=0;
-	float world::map_size[2]={200, 200};
-	float world::map_offset=20;
+	float world::map_size[2]={320, 320};
+	float world::map_offset=32;
 	bool world::main_loop=0;
 	clasteredServer::mutex world::m;
 	clasteredServer::grid* world::grid=0;
 	clasteredServer::socket* world::sock=0;
-	clasteredServerSlave::map world::map;
+	clasteredServerSlave::map world::map(10,10);
 	std::queue<int> world::ids;
 	std::map<int, npc*>world:: npcs;
 	std::map<int, player*> world::players;

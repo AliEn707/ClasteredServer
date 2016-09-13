@@ -1,6 +1,6 @@
 #include <math.h>
 
-#include "world.h"
+#include "world.h" //for sqr
 #include "point.h"
 
 namespace clasteredServerSlave {
@@ -25,6 +25,10 @@ namespace clasteredServerSlave {
 	
 	float point::distanse(point &b){
 		return sqrtf(sqr(b.x-x)+sqr(b.y-y));
+	}
+
+	float point::distanse2(point &b){
+		return sqr(b.x-x)+sqr(b.y-y);
 	}
 
 	float point::scalar(point a,point b){

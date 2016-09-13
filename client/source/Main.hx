@@ -2,7 +2,7 @@ package;
 import haxe.CallStack;
 
 import clasteredServerClient.Connection;
-import clasteredServerClient.Connector;
+import clasteredServerClient.Receiver;
 import clasteredServerClient.Packet;
 import flixel.FlxGame;
 import openfl.display.Sprite;
@@ -33,8 +33,8 @@ class Main extends Sprite
 			game.id = conn.auth("qwer", "qwer");
 			trace(game.id);
 			game.connection = conn;
-			game.connector = true;
-			game.c = new Connector();
+			game.recv_loop = true;
+			game.receiver = new Receiver();
 		}catch(e:Dynamic){
 			trace(e);
 			trace(CallStack.toString(CallStack.exceptionStack()));
