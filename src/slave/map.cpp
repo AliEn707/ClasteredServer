@@ -73,7 +73,19 @@ namespace clasteredServerSlave{
 		}
 		size.x=world::map_size[0]/cell.x;//TODO: change to local server area
 		size.y=world::map_size[1]/cell.y;
-		grid=new clasteredServerSlave::cell[(int)(size.x*size.y)+1];
+		int grid_size=size.x*size.y;
+		grid=new clasteredServerSlave::cell[grid_size+1];
+		for(int i=0;i<grid_size;i++){
+			vector<segment> borders=cell_borders(i);
+			for(int j=0,jend=segments.size();j<jend;j++){
+				for(int b=0;b<4;b++){
+					if (borders[b].cross(segments[j])){
+						grid[i].segments.push_back(segments[j]);
+						break;
+					}
+				}
+			}
+		}
 	}
 	
 	cell* map::cells(int id){
@@ -89,6 +101,25 @@ namespace clasteredServerSlave{
 	}
 	
 	int map::to_grid(float x, float y){
-		return (x/cell.x)+(y/cell.y)/size.y;
+		return (int)(x/cell.x)+((int)(y/cell.y))*size.y;
+	}
+	
+	std::vector<segment> map::cell_borders(int id){
+		vector<segment> v;
+		int x=id%size.y;
+		int y=id/size.y;
+		point p1(x-cell.x/2, y-cell.y/2);
+		point p2(x-cell.x/2, y+cell.y/2);
+		point p3(x+cell.x/2, y+cell.y/2);
+		point p4(x+cell.x/2, y-cell.y/2);
+		segment s1(p1, p2);
+		segment s2(p2, p3);
+		segment s3(p3, p4);
+		segment s4(p4, p1);
+		v.push_back(s1);
+		v.push_back(s2);
+		v.push_back(s3);
+		v.push_back(s4);
+		return v;
 	}
 }

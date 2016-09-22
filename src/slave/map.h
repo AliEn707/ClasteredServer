@@ -43,7 +43,8 @@ namespace clasteredServerSlave {
 			clasteredServerSlave::cell* cells(point &p);
 			int to_grid(float x, float y);
 			void reconfigure();
-			
+			std::vector<segment> cell_borders(int id);
+		
 		private:
 			void clean_segments();
 	};
