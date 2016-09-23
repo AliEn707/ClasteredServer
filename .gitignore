@@ -10,3 +10,5 @@ client/export/*
 *.out
 src/slave/thread.o
 client/export/.build
+
+*.stackdump

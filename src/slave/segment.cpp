@@ -38,11 +38,11 @@ namespace clasteredServerSlave {
 	bool segment::cross(segment *s){
 		typeof(point::x) v1=this->vector(s->a);
 		typeof(point::x) v2=this->vector(s->b);
-		printf("%g %g \n",v1,v2);
+//		printf("%g %g \n",v1,v2);
 		if ((v1>=0 && v2<=0) || (v1<=0 && v2>=0)){
 			v1=s->vector(this->a);
 			v2=s->vector(this->b);
-			printf("%g %g \n",v1,v2);
+//			printf("%g %g \n",v1,v2);
 			if ((v1>=0 && v2<=0) || (v1<=0 && v2>=0))
 				return 1;
 		}

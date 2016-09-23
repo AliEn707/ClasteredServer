@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <math.h>
 
 #include "map.h"
 #include "world.h"
@@ -15,7 +16,7 @@ namespace clasteredServerSlave{
 		}
 		
 		fseek( f, 0, SEEK_END );
-		auto length = ftell( f ) + appendNull;
+		int length = ftell( f ) + appendNull;
 		fseek( f, 0, SEEK_SET );
 		
 		void* buffer = malloc( length );
@@ -71,20 +72,23 @@ namespace clasteredServerSlave{
 			segments.push_back(new segment(rb,lb));
 			segments.push_back(new segment(lb,lt));
 		}
-		size.x=world::map_size[0]/cell.x;//TODO: change to local server area
-		size.y=world::map_size[1]/cell.y;
+		size.x=ceil((1.0*world::map_size[0])/cell.x);//TODO: change to local server area
+		size.y=ceil((1.0*world::map_size[1])/cell.y);
 		int grid_size=size.x*size.y;
 		grid=new clasteredServerSlave::cell[grid_size+1];
 		for(int i=0;i<grid_size;i++){
 			vector<segment> borders=cell_borders(i);
+//			printf("%d: ",i);
 			for(int j=0,jend=segments.size();j<jend;j++){
 				for(int b=0;b<4;b++){
 					if (borders[b].cross(segments[j])){
 						grid[i].segments.push_back(segments[j]);
+//						printf("%d|%d[%g,%g %g,%g](%g,%g %g,%g) ", j, b,segments[j]->a.x,segments[j]->a.y,segments[j]->b.x,segments[j]->b.y,borders[b].a.x,borders[b].a.y,borders[b].b.x,borders[b].b.y);
 						break;
 					}
 				}
 			}
+//			printf("\n");
 		}
 	}
 	
@@ -108,10 +112,10 @@ namespace clasteredServerSlave{
 		vector<segment> v;
 		int x=id%size.y;
 		int y=id/size.y;
-		point p1(x-cell.x/2, y-cell.y/2);
-		point p2(x-cell.x/2, y+cell.y/2);
-		point p3(x+cell.x/2, y+cell.y/2);
-		point p4(x+cell.x/2, y-cell.y/2);
+		point p1(x*cell.x, y*cell.y);
+		point p2(x*cell.x, y*cell.y+cell.y);
+		point p3(x*cell.x+cell.x, y*cell.y+cell.y);
+		point p4(x*cell.x+cell.x, y*cell.y);
 		segment s1(p1, p2);
 		segment s2(p2, p3);
 		segment s3(p3, p4);
