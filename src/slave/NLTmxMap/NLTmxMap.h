@@ -6,7 +6,10 @@
 
 using namespace std;
 
-
+#define OBJECT_QUAD 0
+#define OBJECT_ELLIPSE 1
+#define OBJECT_POLYGONE 2
+#define OBJECT_POLYLINE 3
 
 class NLTmxMapTileset {
 public:
@@ -44,6 +47,7 @@ struct NLTmxMapPoint {
 class NLTmxMapObject {
 public:
     string name;
+	char type;
     int gid;
     int x;
     int y;

@@ -122,6 +122,8 @@ NLTmxMap* NLLoadTmxMap( char *xml )
             object->x = atoi( objectnode->first_attribute( "x" )->value() );
             object->y = atoi( objectnode->first_attribute( "y" )->value() );
             
+			object->type=OBJECT_QUAD;
+			
             auto widthattr = objectnode->first_attribute( "width" );
             if ( widthattr ) {
                 object->width = atoi( widthattr->value() );
@@ -132,7 +134,13 @@ NLTmxMap* NLLoadTmxMap( char *xml )
                 object->height = atoi( heightattr->value() );
             }
             
-            xml_node<> *polygonnode = objectnode->first_node( "polygon" );
+            xml_node<> *ellipsenode = objectnode->first_node( "ellipse" );
+            
+            if ( ellipsenode ) {
+				object->type=OBJECT_ELLIPSE;
+			}
+				
+			xml_node<> *polygonnode = objectnode->first_node( "polygon" );
             
             if ( polygonnode ) {
 				auto pointsattr = polygonnode->first_attribute( "points" );
@@ -146,6 +154,7 @@ NLTmxMap* NLLoadTmxMap( char *xml )
 					}
 				}
 				object->points.push_back(object->points[0]);//create loop
+				object->type=OBJECT_POLYGONE;
             }
 			
             xml_node<> *polylinenode = objectnode->first_node( "polyline" );
@@ -161,6 +170,7 @@ NLTmxMap* NLLoadTmxMap( char *xml )
 						object->points.push_back(p);
 					}
 				}
+				object->type=OBJECT_POLYLINE;
             }
 			
 			xml_node<> *propertiesnode = objectnode->first_node( "properties" );
