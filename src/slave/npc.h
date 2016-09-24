@@ -28,7 +28,7 @@ namespace clasteredServerSlave {
 		public:
 			short state;
 			int id;
-			int d;
+			int r; //radius of collision
 			bool alive;
 			point position;
 			short health;
@@ -36,6 +36,8 @@ namespace clasteredServerSlave {
 			clasteredServer::mutex m;
 			int owner_id;
 			int slave_id;
+			int cell_id;
+			std::vector<int> cells;
 			struct{
 				struct{
 					bool done;

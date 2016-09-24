@@ -61,7 +61,7 @@ static void* threadFunc(void *arg){
 		else
 			printf("unknown message\n");
 		if (bots>0 && world::ids.size()>0){
-			npc::addBot(10,10);
+			npc::addBot(world::map_size[0]/2,world::map_size[1]/2);
 			bots--;
 		}
 	}

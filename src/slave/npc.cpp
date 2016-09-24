@@ -30,12 +30,12 @@ namespace clasteredServerSlave{
 			attrs.push_back(0);
 		}
 		timestamp=time(0);
+		//TODO: add normal spawn position
+		///
 		position.x=10;
 		position.y=10;
-		//TODO: add spawn position check
-		///
 		vel=10;
-		d=5;
+		r=5;
 	}
 	
 	npc::~npc(){
@@ -73,10 +73,19 @@ namespace clasteredServerSlave{
 			position.y+=y;
 			attrs[attr(&position.y)]=1;
 		}
+		int _cell_id=world::map.to_grid(position.x, position.y);
+		if (cell_id!=_cell_id){
+			world::map.cells(cell_id)->npcs.erase(id);
+			cell_id=_cell_id;
+			world::map.cells(cell_id)->npcs[id]=this;
+			//TODO: add cells where npc can be
+		}
 		if (bot.used){
+//			printf("bot %d on %g %g -> %g %g\n", id, position.x, position.y, bot.goal.x, bot.goal.y);
 			if (position.distanse2(bot.goal)<=3*vel){
-				bot.goal.x=(rand()%((int)world::map_size[0]*100))/100.0;
-				bot.goal.y=(rand()%((int)world::map_size[1]*100))/100.0;
+				bot.goal.x=(rand()%(((int)world::map_size[0]-20)*100))/100.0+10;
+				bot.goal.y=(rand()%(((int)world::map_size[1]-20)*100))/100.0+10;
+//				printf("new goal on %d -> %g %g\n", id, bot.goal.x, bot.goal.y);
 				set_dir();
 			}
 		}
@@ -229,24 +238,28 @@ namespace clasteredServerSlave{
 		npc* n=new npc(world::getId());
 		n->position.x=x;
 		n->position.y=y;
-		n->set_dir(rand()%100, rand()%100);
+		n->direction.y=0.1;
+		n->bot.goal.x=x;
+		n->bot.goal.y=y;
 		
-		n->bot.goal.x=n->position.x+n->direction.x*n->vel;
-		n->bot.goal.y=n->position.y+n->direction.y*n->vel;
 		n->bot.used=1;
 		withLock(world::m, world::npcs[n->id]=n);
-		printf("added bot %d\n", n->id);
+		printf("added bot %d on %g, %g\n", n->id, n->position.x, n->position.y);
 		return n->id;
 	}
 	
 	bool npc::check_point(typeof(point::x) x, typeof(point::y) y){
 		point p(x,y);
+		std::vector<int> &&ids=world::map.near_cells(x, y, r); //!check this!
 		//printf("segments %d \n", world::map.segments.size());
-		for(int i=0,end=world::map.segments.size();i<end;i++){//TODO: change to check by map grid
-			segment *s=world::map.segments[i];
-			if(s->distanse(p)<=d){
-				//printf("dist \n");
-				return 0;
+		for(int c=0,cend=ids.size();c<cend;c++){//TODO: change to check by map grid
+			clasteredServerSlave::cell *cell=world::map.cells(ids[c]);
+			for(int i=0,end=cell->segments.size();i<end;i++){//TODO: change to check by map grid
+				segment *s=cell->segments[i];
+				if(s->distanse(p)<=r){
+					//printf("dist \n");
+					return 0;
+				}
 			}
 		}
 		return 1;

@@ -100,12 +100,39 @@ namespace clasteredServerSlave{
 		return cells(to_grid(p.x, p.y));
 	}
 	
-	cell* map::cells(float x, float y){
+	cell* map::cells(typeof(point::x) x, typeof(point::y) y){
 		return cells(to_grid(x, y));
 	}
 	
-	int map::to_grid(float x, float y){
-		return (int)(x/cell.x)+((int)(y/cell.y))*size.y;
+	std::vector<int> map::cells(typeof(point::x) l, typeof(point::y) t, typeof(point::x) r, typeof(point::y) b){
+		std::vector<int> v;
+		//TODO: check returned ids
+		for(int x=to_grid_x(l), xend=to_grid_x(r);x<=xend;x++){
+			for(int y=to_grid_y(t), yend=to_grid_y(b);y<=yend;y++){
+				v.push_back(x+y*size.y);
+			}
+		}
+		return v;
+	}
+	
+	int map::to_grid(typeof(point::x) x, typeof(point::y) y){
+		return to_grid_x(x)+to_grid_y(y)*size.y;
+	}
+	
+	int map::to_grid_x(typeof(point::x) x){
+		return x/cell.x;
+	}
+	
+	int map::to_grid_y(typeof(point::y) y){
+		return y/cell.y;
+	}
+	
+	int map::id_to_x(int id){
+		return id/size.y;
+	}
+	
+	int map::id_to_y(int id){
+		return id%size.y;
 	}
 	
 	std::vector<segment> map::cell_borders(int id){
@@ -125,5 +152,14 @@ namespace clasteredServerSlave{
 		v.push_back(s3);
 		v.push_back(s4);
 		return v;
+	}
+	
+	std::vector<int> map::near_cells(int id, typeof(npc::r) r){
+		return near_cells(id_to_x(id)*cell.x, id_to_y(id)*cell.y, r);
+	}
+	
+	std::vector<int> map::near_cells(typeof(point::x) x, typeof(point::y) y, typeof(npc::r) r){
+		//TODO: check returned data
+		return cells(x-r, y-r, x+r, y+r);
 	}
 }

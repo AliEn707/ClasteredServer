@@ -22,10 +22,10 @@ namespace clasteredServerSlave {
 
 	struct cell{
 		int id;
-		std::vector<npc*> npcs;
+		std::map<int, npc*> npcs;
 		std::vector<segment*> segments;
-		npc* getNpc(int id);
-		void addNpc(npc *n);
+		npc* get_npc(int id);
+		void add_npc(npc *n);
 	};
 
 	class map {
@@ -39,11 +39,18 @@ namespace clasteredServerSlave {
 			map(int x, int y);
 			~map();
 			clasteredServerSlave::cell* cells(int id);
-			clasteredServerSlave::cell* cells(float x, float y);
 			clasteredServerSlave::cell* cells(point &p);
-			int to_grid(float x, float y);
+			clasteredServerSlave::cell* cells(typeof(point::x) x, typeof(point::y) y);
+			std::vector<int> cells(typeof(point::x) l, typeof(point::y) t, typeof(point::x) r, typeof(point::y) b);
+			int to_grid(typeof(point::x) x, typeof(point::y) y);
+			int to_grid_x(typeof(point::x) x);
+			int to_grid_y(typeof(point::y) y);
+			int id_to_x(int id);
+			int id_to_y(int id);
 			void reconfigure();
 			std::vector<segment> cell_borders(int id);
+			std::vector<int> near_cells(int id, typeof(npc::r) r);
+			std::vector<int> near_cells(typeof(point::x) x, typeof(point::y) y, typeof(npc::r) r);
 		
 		private:
 			void clean_segments();
