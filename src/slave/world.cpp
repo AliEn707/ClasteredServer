@@ -10,6 +10,19 @@
 ╚══════════════════════════════════════════════════════════════╝
 */
 
+namespace std{
+	ostream& operator<<(ostream &stream, const vector<int> &v) {
+		cout << "[";
+		for(int i=0, end=v.size();i<end;i++){
+			cout << v[i];
+			if (i<end-1)
+				cout << ", ";
+		}
+		cout << "]";
+		return stream;
+	}
+}
+
 using namespace clasteredServer;
 
 namespace clasteredServerSlave {

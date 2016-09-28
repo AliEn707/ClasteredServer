@@ -1,5 +1,6 @@
 #include <cstdio>
 #include <cstdlib>
+#include <iostream>
 extern "C"{
 #include <math.h>
 #include <string.h>
@@ -8,6 +9,7 @@ extern "C"{
 #include "world.h"
 
 using namespace clasteredServer;
+
 
 namespace clasteredServerSlave{
 
@@ -30,6 +32,7 @@ namespace clasteredServerSlave{
 			attrs.push_back(0);
 		}
 		timestamp=time(0);
+		cell_id=0;
 		//TODO: add normal spawn position
 		///
 		position.x=10;
@@ -60,26 +63,21 @@ namespace clasteredServerSlave{
 	}
 	
 	void npc::move(){
-		if (direction.x || direction.y)
-			move(direction.x*vel, direction.y*vel);
+		move(direction.x*vel, direction.y*vel);
 	}
 	
-	void npc::move(float x, float y){
-		if (check_point(position.x+x,position.y)){
-			position.x+=x;
-			attrs[attr(&position.x)]=1;
-		}
-		if (check_point(position.x,position.y+y)){
-			position.y+=y;
-			attrs[attr(&position.y)]=1;
-		}
-		int _cell_id=world::map.to_grid(position.x, position.y);
-		if (cell_id!=_cell_id){
-			world::map.cells(cell_id)->npcs.erase(id);
-			cell_id=_cell_id;
-			world::map.cells(cell_id)->npcs[id]=this;
-			//TODO: add cells where npc can be
-		}
+	void npc::move(typeof(point::x) x, typeof(point::y) y){
+		if (x!=0)
+			if (check_point(position.x+x,position.y)){
+				position.x+=x;
+				attrs[attr(&position.x)]=1;
+			}
+		if (y!=0)
+			if (check_point(position.x,position.y+y)){
+				position.y+=y;
+				attrs[attr(&position.y)]=1;
+			}
+		
 		if (bot.used){
 //			printf("bot %d on %g %g -> %g %g\n", id, position.x, position.y, bot.goal.x, bot.goal.y);
 			if (position.distanse2(bot.goal)<=3*vel){
@@ -89,7 +87,53 @@ namespace clasteredServerSlave{
 				set_dir();
 			}
 		}
+		update_cells();
 	}
+	
+#define	m world::map
+	bool npc::update_cells(){//TODO:check if it works
+		int _cell_id=m.to_grid(position.x, position.y);
+		if (cell_id!=_cell_id){//if npc move to other cell
+			std::vector<int> &&v=m.near_cells(_cell_id, r);
+			std::map<int, bool> e;
+//			std::cout << _cell_id <<"\t" << v<< std::endl;
+			//set old cells to true
+			for(int i=0,end=cells.size();i<end;i++){
+				e[cells[i]]=1;
+			}
+			//set new cells to false
+			for(int i=0,end=v.size();i<end;i++){
+				if (e[v[i]])
+					e[v[i]]=0;
+				else
+					e.erase(v[i]);//TODO:rewrite
+			}
+			//remove npc from old
+			//invert false and remove true
+			for(std::map<int, bool>::iterator i=e.begin(),end=e.end();i!=end;++i){
+				if (i->second){
+//					printf("%d\n", i->first);
+					m.cells(i->first)->npcs.erase(id);///WTF!!!
+					e.erase(i->first);
+				}else{
+					e[i->first]=1;
+				}
+			} 
+			//add npc to new cells
+			for(int i=0,end=v.size();i<end;i++){
+//				printf("\t %d\n", v[i]);
+				if (!e[v[i]])
+					m.cells(v[i])->npcs[id]=this;
+			}
+			//c->npcs.erase(id);
+			cell_id=_cell_id;
+			cells=v;
+			//TODO: add cells where npc can be
+			return 1;
+		}
+		return 0;
+	}
+#undef m
 	
 	void npc::set_dir(){
 		if (bot.used)

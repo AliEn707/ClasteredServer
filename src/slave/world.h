@@ -4,6 +4,7 @@
 #include <map>
 #include <queue>
 #include <vector>
+#include <iostream>
 
 #include "lib/grid.h"
 #include "npc.h"
@@ -37,6 +38,9 @@ extern "C"{
 	};
 }
 
+namespace std{
+	ostream& operator<<(ostream &stream, const vector<int> &v);
+}
 
 namespace clasteredServerSlave {
 

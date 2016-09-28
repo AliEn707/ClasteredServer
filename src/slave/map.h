@@ -33,7 +33,7 @@ namespace clasteredServerSlave {
 			point source;
 			pointi size;
 			point cell;
-			clasteredServerSlave::cell *grid=0;
+			clasteredServerSlave::cell *grid;
 			std::vector<segment*> segments;
 			
 			map(int x, int y);

@@ -15,6 +15,8 @@ namespace clasteredServerSlave {
 			float length();
 			bool cross(segment *b);
 			typeof(point::x) vector(point &p);
+		
+			friend std::ostream& operator<<(std::ostream &stream, const segment &s);
 	};
 	
 }

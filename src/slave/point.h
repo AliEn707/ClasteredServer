@@ -14,6 +14,8 @@ namespace clasteredServerSlave {
 			
 			static float scalar(point a, point b);
 			static point toVector(point &a, point &b);
+
+			friend std::ostream& operator<<(std::ostream &stream, const point &p);
 	};
 	
 	struct pointi{

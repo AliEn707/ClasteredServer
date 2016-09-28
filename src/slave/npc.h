@@ -7,19 +7,14 @@
 #include "lib/packet.h"
 #include "point.h"
 
-#ifdef __cplusplus
 extern "C"{
 #include <time.h>
-#endif
-
-
-#ifdef __cplusplus
 }
 
 
 namespace clasteredServerSlave {
 
-	struct bot{
+	struct bot {
 		bool used;
 		point goal;
 	};
@@ -54,7 +49,7 @@ namespace clasteredServerSlave {
 			~npc();
 			bool clear();
 			void move();
-			void move(float x, float y);
+			void move(typeof(point::x) x, typeof(point::y) y);
 			void set_dir();
 			void set_dir(float x, float y);
 			int attr(void *attr);//get index by pointer
@@ -66,6 +61,8 @@ namespace clasteredServerSlave {
 			std::vector<int> gridShares();
 
 			static int addBot(float x, float y);
+			
+			friend std::ostream& operator<<(std::ostream &stream, const npc &n);
 		private:
 			float vel;
 			time_t timestamp;
@@ -74,10 +71,10 @@ namespace clasteredServerSlave {
 			std::map<void*, int> shift_attr;			
 			
 			bool check_point(typeof(point::x) x, typeof(point::y) y);
+			bool update_cells();
 	};
 }
 
-#endif
 
 
 #endif

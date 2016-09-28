@@ -201,27 +201,32 @@ namespace clasteredServer {
 					break;
 				case 2:
 					memcpy(&chank.value.s, &buf[++i], sizeof(chank.value.s));
+					chank.value.s=byteSwap(chank.value.s);
 					i+=sizeof(chank.value.s);
 					chanks.push_back(chank);
 					break;
 				case 3:
 					memcpy(&chank.value.i, &buf[++i], sizeof(chank.value.i));
+					chank.value.i=byteSwap(chank.value.i);
 					i+=sizeof(chank.value.i);
 					chanks.push_back(chank);
 					break;
 				case 4:
 					memcpy(&chank.value.f, &buf[++i], sizeof(chank.value.f));
+					chank.value.f=byteSwap(chank.value.f);
 					i+=sizeof(chank.value.f);
 					chanks.push_back(chank);
 					break;
 				case 5:
 					memcpy(&chank.value.d, &buf[++i], sizeof(chank.value.d));
+					chank.value.d=byteSwap(chank.value.d);
 					i+=sizeof(chank.value.d);
 					chanks.push_back(chank);
 					break;
 				case 6:
 					short $;
 					memcpy(&$, &buf[++i], sizeof($));
+					$=byteSwap($);
 					i+=sizeof($);
 					chank.str.assign(buf[i], $);
 					i+=$;
