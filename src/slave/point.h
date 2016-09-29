@@ -2,24 +2,37 @@
 #define CLASTERED_SERVER_SLAVE_POINT_HEADER
 
 namespace clasteredServerSlave {
-	class point{
-		public:
-			float x,y;
-			
-			point();
-			point(typeof(x) _x, typeof(y) _y);
-			void normalize();
-			float distanse(point &b);
-			float distanse2(point &b);
-			
-			static float scalar(point a, point b);
-			static point toVector(point &a, point &b);
+	template <class T>
+		class point_{
+			public:
+				T x,y;
+				
+				point_();
+				point_(T _x, T _y);
+				void normalize();
+				template<class T1>
+					float distanse(point_<T1> &b);
+				template<class T1>
+					T distanse2(point_<T1> &b);
 
-			friend std::ostream& operator<<(std::ostream &stream, const point &p);
-	};
+				template<class T1, class T2>
+					static T scalar(point_<T1> &&a, point_<T2> &&b);
+				template<class T1, class T2>
+					static point_<T> toVector(point_<T1> &a, point_<T2> &b);
+
+		};
 	
-	struct pointi{
-		int x,y;
-	};
+	template <class T>
+		std::ostream& operator<<(std::ostream &stream, const point_<T> &p);
+	
+	typedef point_<float> point;
+	
+	typedef point_<short> points;
+	typedef point_<int> pointi;
+	typedef point_<float> poinf;
+	
 }
+
+#include "point_definition.h"
+
 #endif

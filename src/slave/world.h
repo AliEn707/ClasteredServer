@@ -29,8 +29,6 @@ extern "C"{
 #define MSG_SERVER_NPC_INFO 41 
 #define MSG_SERVER_NPC_UPDATE 40 
 
-#define sqr(x) ({typeof(x) _x=x; _x*_x;})
-
 #ifdef __cplusplus
 
 	struct char2{
