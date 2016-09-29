@@ -13,9 +13,11 @@
 #include "lib/socket.h"
 #include "lib/mutex.h"
 
-#ifdef __cplusplus
 extern "C"{
-#endif
+	struct char2{
+		char x,y;
+	};
+}
 
 #define MASTER_MESSAGE 0
 #define CLIENT_MESSAGE 1
@@ -28,13 +30,6 @@ extern "C"{
 
 #define MSG_SERVER_NPC_INFO 41 
 #define MSG_SERVER_NPC_UPDATE 40 
-
-#ifdef __cplusplus
-
-	struct char2{
-		char x,y;
-	};
-}
 
 namespace std{
 	ostream& operator<<(ostream &stream, const vector<int> &v);
@@ -61,7 +56,6 @@ namespace clasteredServerSlave {
 	};
 }
 
-#endif
 
 
 #endif

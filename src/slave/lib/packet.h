@@ -1,15 +1,11 @@
 #ifndef CLASTERED_SERVER_PACKET_HEADER
 #define CLASTERED_SERVER_PACKET_HEADER
 
-#ifdef __cplusplus
 #include <vector>
 #include <string>
 
 extern "C"{
-#endif
-
-
-#ifdef __cplusplus
+	
 }
 
 namespace clasteredServer {
@@ -59,8 +55,6 @@ namespace clasteredServer {
 			void parse();
 	};
 }
-
-#endif
 
 
 #endif

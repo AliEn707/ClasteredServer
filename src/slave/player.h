@@ -6,12 +6,9 @@
 
 #include "npc.h"
 
-#ifdef __cplusplus
+
 extern "C"{
-#endif
 
-
-#ifdef __cplusplus
 }
 
 namespace clasteredServerSlave {
@@ -31,7 +28,6 @@ namespace clasteredServerSlave {
 	};
 }
 
-#endif
 
 
 #endif

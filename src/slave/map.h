@@ -10,12 +10,9 @@
 #include "player.h"
 #include "segment.h"
 
-#ifdef __cplusplus
+
 extern "C"{
-#endif
 
-
-#ifdef __cplusplus
 }
 
 namespace clasteredServerSlave {
@@ -57,8 +54,6 @@ namespace clasteredServerSlave {
 			void clean_segments();
 	};
 }
-
-#endif
 
 
 #endif

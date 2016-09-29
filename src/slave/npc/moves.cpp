@@ -1,5 +1,6 @@
 #include <cstdlib>
 
+#include "moves.h"
 #include "../npc.h"
 #include "../world.h"
 
@@ -8,16 +9,16 @@ namespace clasteredServerSlave{
 	std::map<short, move_func> npc::moves;
 
 #define addMoveFunc(id)\
-	moves[id]=&npc::move ## id;
+	moves[id]=(move_func)&npc_moves::move ## id;
 	
-	void npc::moves_init(){
+	void npc_moves::init(){
 		addMoveFunc(0);
 		addMoveFunc(1);
 	}
 #undef addMoveFunc
 	
 	//common move
-	void npc::move0(typeof(point::x) x, typeof(point::y) y){
+	void npc_moves::move0(typeof(point::x) x, typeof(point::y) y){
 		if (x!=0)
 			if (check_point(position.x+x,position.y)){
 				position.x+=x;
@@ -42,7 +43,7 @@ namespace clasteredServerSlave{
 	}
 	
 	//bullet move, go straight for dist, enemy or wall, than suicide
-	void npc::move1(typeof(point::x) x, typeof(point::y) y){
+	void npc_moves::move1(typeof(point::x) x, typeof(point::y) y){
 		if (x!=0 && y!=0){
 			if (check_point(position.x+x,position.y+y)){
 				position.x+=x;

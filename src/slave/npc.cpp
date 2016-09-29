@@ -1,18 +1,20 @@
 #include <cstdio>
 #include <cstdlib>
 #include <iostream>
+#include <list>
 extern "C"{
 #include <math.h>
 #include <string.h>
 }
 #include "npc.h"
+#include "npc/moves.h"
 #include "world.h"
 
 using namespace clasteredServer;
 
 
 namespace clasteredServerSlave{
-
+	
 	npc::npc(int _id, int slave, short t){
 		id=_id;
 		slave_id=slave?:world::id;
@@ -70,12 +72,11 @@ namespace clasteredServerSlave{
 	}
 	
 #define m world::map
-	bool npc::update_cells(){//TODO:check if it works
+	bool npc::update_cells(){//TODO:improve performance
 		int _cell_id=m.to_grid(position.x, position.y);
 		if (cell_id!=_cell_id){//if npc move to other cell
-			std::vector<int> &&v=m.near_cells(_cell_id, r);
 			std::map<int, bool> e;
-//			std::cout << _cell_id <<"\t" << v<< std::endl;
+			std::vector<int> &&v=m.near_cells(_cell_id, r);
 			//set old cells to true
 			for(int i=0,end=cells.size();i<end;i++){
 				e[cells[i]]=1;
@@ -88,16 +89,22 @@ namespace clasteredServerSlave{
 						e[it->first]=0;
 			}
 			//remove npc from old
-			//invert false and remove true
-			for(std::map<int, bool>::iterator i=e.begin(),end=e.end();i!=end;++i){
+			//invert false
+			std::list<int> for_del;
+			for(std::map<int, bool>::iterator i=e.begin(), end=e.end();i!=end;++i){
+//				printf("%d\n", i->first);
 				if (i->second){
-//					printf("%d\n", i->first);
 					m.cells(i->first)->npcs.erase(id);///WTF!!!
-					e.erase(i->first);
+					for_del.push_back(i->first);
+//					e.erase(i->first);
 				}else{
 					e[i->first]=1;
 				}
 			} 
+			//remove true
+			for(auto i:for_del){//!need to use!
+				e.erase(i);
+			}
 			//add npc to new cells
 			for(int i=0,end=v.size();i<end;i++){
 //				printf("\t %d\n", v[i]);
@@ -107,7 +114,6 @@ namespace clasteredServerSlave{
 			//c->npcs.erase(id);
 			cell_id=_cell_id;
 			cells=v;
-			//TODO: add cells where npc can be
 			return 1;
 		}
 		return 0;
@@ -289,7 +295,7 @@ namespace clasteredServerSlave{
 	}
 
 	void npc::init(){
-		moves_init();
+		npc_moves::init();
 	}
 	
 }

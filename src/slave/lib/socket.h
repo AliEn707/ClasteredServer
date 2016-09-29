@@ -4,11 +4,7 @@
 #include "packet.h"
 #include "mutex.h"
 
-#ifdef __cplusplus
 extern "C"{
-#endif
-
-#ifdef __cplusplus
 }
 
 namespace clasteredServer {
@@ -35,8 +31,6 @@ namespace clasteredServer {
 			static socket* connect(char*, int);
 	};
 }
-
-#endif
 
 
 #endif

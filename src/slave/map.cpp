@@ -96,7 +96,9 @@ namespace clasteredServerSlave{
 	}
 	
 	cell* map::cells(int id){
-		return &grid[id];
+		int s;
+//		return &grid[id];
+		return &grid[id<0?0:(id>=(s=sqr(size.x))?(s-1):id)];
 	}
 	
 	cell* map::cells(point &p){

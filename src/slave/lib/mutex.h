@@ -1,13 +1,8 @@
 #ifndef CLASTERED_SERVER_MUTEX_HEADER
 #define CLASTERED_SERVER_MUTEX_HEADER
 
-#ifdef __cplusplus
 extern "C"{
-#endif
-
 #include <pthread.h>
-
-#ifdef __cplusplus
 }
 
 namespace clasteredServer {
@@ -30,8 +25,6 @@ namespace clasteredServer {
 		m.unlock();\
 		o;\
 	})
-
-#endif
 
 
 #endif

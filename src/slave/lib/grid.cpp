@@ -214,51 +214,6 @@ namespace clasteredServer {
 		return (index>0 && index<grid_size[0]*grid_size[1])?index:0;
 	}
 
-
-//c bindings
-
-	clastered_server_grid_t clasteredServerGridInit(float size[2], float offset) {
-		try{
-			return new grid(size, offset);
-		}catch (...){
-			return 0;
-		}
-	}
-
-	void clasteredServerGridDestroy(clastered_server_grid_t untyped_ptr) {
-		grid* typed_ptr = static_cast<grid*>(untyped_ptr);
-		delete typed_ptr;
-	}
-
-	int clasteredServerGridGetOwner(clastered_server_grid_t untyped_self, float x, float y) {
-		grid* typed_self = static_cast<grid*>(untyped_self);
-		return typed_self->getOwner(x, y);
-	}
-
-	int* clasteredServerGridGetShares(clastered_server_grid_t untyped_self, float x, float y,int* size) {
-		grid* typed_self = static_cast<grid*>(untyped_self);
-		std::vector<int> shares = typed_self->getShares(x, y);//WTF?!
-		*size=shares.size();
-		return shares.data();//need to check
-	}
-
-	int clasteredServerGridAdd(clastered_server_grid_t untyped_self, int id) {
-		grid* typed_self = static_cast<grid*>(untyped_self);
-		try{
-			return typed_self->add(id);
-		}catch (...){
-			return 0;
-		}
-	}
-	
-	int clasteredServerGridRemove(clastered_server_grid_t untyped_self, int id) {
-		grid* typed_self = static_cast<grid*>(untyped_self);
-		try{
-			return typed_self->remove(id);
-		}catch (...){
-			return 0;
-		}
-	}
 }
 
 /*

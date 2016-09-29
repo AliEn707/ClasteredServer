@@ -67,10 +67,9 @@ namespace clasteredServerSlave {
 			
 			static int addBot(float x, float y);
 			static void init();
-			static void moves_init();
 			
 			friend std::ostream& operator<<(std::ostream &stream, const npc &n);
-		private:
+		protected:
 			float vel;
 			time_t timestamp;
 			point direction;
@@ -79,8 +78,6 @@ namespace clasteredServerSlave {
 			
 			bool check_point(typeof(point::x) x, typeof(point::y) y);
 			bool update_cells();
-			void move0(typeof(point::x) x, typeof(point::y) y);
-			void move1(typeof(point::x) x, typeof(point::y) y);
 	};
 }
 

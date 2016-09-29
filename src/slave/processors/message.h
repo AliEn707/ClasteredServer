@@ -5,12 +5,8 @@
 
 #include "../lib/packet.h"
 
-#ifdef __cplusplus
 extern "C"{
-#endif
 
-
-#ifdef __cplusplus
 }
 
 namespace clasteredServerSlave {
@@ -20,8 +16,6 @@ namespace clasteredServerSlave {
 		static void init();
 	};
 }
-
-#endif
 
 
 #endif
