@@ -13,10 +13,10 @@ using namespace clasteredServer;
 
 namespace clasteredServerSlave{
 
-	npc::npc(int _id, int slave){
+	npc::npc(int _id, int slave, short t){
 		id=_id;
 		slave_id=slave?:world::id;
-		
+		type=t;
 		memset(&bot,0,sizeof(bot));
 		memset(keys,0,sizeof(keys));
 		memset(&direction,0,sizeof(direction));
@@ -31,6 +31,8 @@ namespace clasteredServerSlave{
 			shift_attr[attr_shift[i]]=i;
 			attrs.push_back(0);
 		}
+		
+		movef=npc::moves[type];
 		timestamp=time(0);
 		cell_id=0;
 		//TODO: add normal spawn position
@@ -63,34 +65,11 @@ namespace clasteredServerSlave{
 	}
 	
 	void npc::move(){
-		move(direction.x*vel, direction.y*vel);
+		if (movef)
+			(this->*movef)(direction.x*vel, direction.y*vel);
 	}
 	
-	void npc::move(typeof(point::x) x, typeof(point::y) y){
-		if (x!=0)
-			if (check_point(position.x+x,position.y)){
-				position.x+=x;
-				attrs[attr(&position.x)]=1;
-			}
-		if (y!=0)
-			if (check_point(position.x,position.y+y)){
-				position.y+=y;
-				attrs[attr(&position.y)]=1;
-			}
-		
-		if (bot.used){
-//			printf("bot %d on %g %g -> %g %g\n", id, position.x, position.y, bot.goal.x, bot.goal.y);
-			if (position.distanse2(bot.goal)<=3*vel){
-				bot.goal.x=(rand()%(((int)world::map_size[0]-20)*100))/100.0+10;
-				bot.goal.y=(rand()%(((int)world::map_size[1]-20)*100))/100.0+10;
-//				printf("new goal on %d -> %g %g\n", id, bot.goal.x, bot.goal.y);
-				set_dir();
-			}
-		}
-		update_cells();
-	}
-	
-#define	m world::map
+#define m world::map
 	bool npc::update_cells(){//TODO:check if it works
 		int _cell_id=m.to_grid(position.x, position.y);
 		if (cell_id!=_cell_id){//if npc move to other cell
@@ -103,10 +82,10 @@ namespace clasteredServerSlave{
 			}
 			//set new cells to false
 			for(int i=0,end=v.size();i<end;i++){
-				if (e[v[i]])
-					e[v[i]]=0;
-				else
-					e.erase(v[i]);//TODO:rewrite
+				std::map<int, bool>::iterator it = e.find(v[i]);
+				if (it!=e.end())
+					if (it->second)
+						e[it->first]=0;
 			}
 			//remove npc from old
 			//invert false and remove true
@@ -308,4 +287,9 @@ namespace clasteredServerSlave{
 		}
 		return 1;
 	}
+
+	void npc::init(){
+		moves_init();
+	}
+	
 }

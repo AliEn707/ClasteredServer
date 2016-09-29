@@ -51,7 +51,8 @@ namespace clasteredServerSlave {
 			std::vector<segment> cell_borders(int id);
 			std::vector<int> near_cells(int id, typeof(npc::r) r);
 			std::vector<int> near_cells(typeof(point::x) x, typeof(point::y) y, typeof(npc::r) r);
-		
+			
+			friend std::ostream& operator<<(std::ostream &stream, const map &m);
 		private:
 			void clean_segments();
 	};

@@ -13,16 +13,20 @@ extern "C"{
 
 
 namespace clasteredServerSlave {
-
+	class npc;
+	typedef void (npc:: *move_func)(typeof(point::x) x, typeof(point::y) y);
+	
 	struct bot {
 		bool used;
 		point goal;
+		int dist; //moved distance
 	};
 
 	class npc {
 		public:
 			short state;
 			int id;
+			short type;
 			int r; //radius of collision
 			bool alive;
 			point position;
@@ -40,16 +44,15 @@ namespace clasteredServerSlave {
 					bool server;
 				} pack;
 			} _updated;
-			char keys[4]; //x,y l-r+t-b+		l,t,r,b
+			char keys[4]; //x,y l- r+ t- b+		l,t,r,b
 			clasteredServerSlave::bot bot;
-			clasteredServer::mutex access;
 			std::vector<bool> attrs; //attributes flags
-	
-			npc(int id, int slave=0);
+			move_func movef;
+
+			npc(int id, int slave=0, short type=0);
 			~npc();
 			bool clear();
 			void move();
-			void move(typeof(point::x) x, typeof(point::y) y);
 			void set_dir();
 			void set_dir(float x, float y);
 			int attr(void *attr);//get index by pointer
@@ -60,7 +63,11 @@ namespace clasteredServerSlave {
 			int gridOwner();
 			std::vector<int> gridShares();
 
+			static std::map<short, move_func> moves;
+			
 			static int addBot(float x, float y);
+			static void init();
+			static void moves_init();
 			
 			friend std::ostream& operator<<(std::ostream &stream, const npc &n);
 		private:
@@ -72,6 +79,8 @@ namespace clasteredServerSlave {
 			
 			bool check_point(typeof(point::x) x, typeof(point::y) y);
 			bool update_cells();
+			void move0(typeof(point::x) x, typeof(point::y) y);
+			void move1(typeof(point::x) x, typeof(point::y) y);
 	};
 }
 

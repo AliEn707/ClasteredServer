@@ -16,6 +16,7 @@ extern "C"{
 #include "lib/sync.h"
 #include "lib/bytes_order.h"
 #include "world.h"
+#include "npc.h"
 
 using namespace clasteredServer;
 using namespace clasteredServerSlave;
@@ -27,9 +28,9 @@ static void default_sigaction(int signal, siginfo_t *si, void *arg){
 	world::main_loop=0;
 }
 
+#ifndef __CYGWIN__
 static void segfault_sigaction(int sig){
 	printf("Cought segfault, exiting\n");
-#ifndef __CYGWIN__
 	void *array[20];
 	size_t size;
 	
@@ -39,11 +40,11 @@ static void segfault_sigaction(int sig){
 	// print out all the frames to stderr
 	fprintf(stderr, "Error: signal %d:\n", sig);
 	backtrace_symbols_fd(array, size, STDERR_FILENO);
-#endif
 	world::main_loop=(world::main_loop+1)&1;
 	world::clear();
 	exit(1);
 }
+#endif
 
 int main(int argc, char* argv[]){
 	int TPS=24;
@@ -65,6 +66,7 @@ int main(int argc, char* argv[]){
 		sscanf(argv[1], "%d", &port);
 	
 	processors::init();
+	npc::init();
 	srand(time(0));
 	//init map
 	world::init();
