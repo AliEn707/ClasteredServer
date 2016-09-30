@@ -53,7 +53,7 @@ namespace clasteredServer {
 		return data[to_grid(x/cell[0], y/cell[1])]->owner;
 	}
 	
-	std::vector<int> grid::getShares(const float x, const float y){//return array of int of different size
+	std::vector<int>& grid::getShares(const float x, const float y){//return array of int of different size
 		return data[to_grid(x/cell[0], y/cell[1])]->shares;
 	}
 

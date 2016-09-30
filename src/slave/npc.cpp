@@ -22,13 +22,12 @@ namespace clasteredServerSlave{
 		memset(&direction,0,sizeof(direction));
 		memset(&_updated,0,sizeof(_updated));
 		
-		attr_shift.push_back(&position.x); //0
-		attr_shift.push_back(&position.y); //1
-		attr_shift.push_back(&direction.x);
-		attr_shift.push_back(&direction.y);
+		attr.push_back(position.x); //0
+		attr.push_back(position.y); //1
+		attr.push_back(direction.x);
+		attr.push_back(direction.y);
 		
-		for(unsigned i=0;i<attr_shift.size();i++){
-			shift_attr[attr_shift[i]]=i;
+		for(unsigned i=0;i<attr.size();i++){
 			attrs.push_back(0);
 		}
 		
@@ -133,14 +132,6 @@ namespace clasteredServerSlave{
 		direction.normalize();
 	}
 	
-	int npc::attr(void *attr){
-		return shift_attr[attr];
-	}
-	
-	void* npc::attr(int index){
-		return attr_shift[index];
-	}
-	
 	void npc::update(packet * p){
 		for(unsigned i=1;i<p->chanks.size();i++){
 			int index=(int)p->chanks[i++].value.c;
@@ -152,7 +143,7 @@ namespace clasteredServerSlave{
 					if (p->chanks[i].type<6){
 //						printf("sizeof chank %d\n",p->chanks[i].size());
 						void* data=p->chanks[i].data();
-						if (data)
+						if (data && p->chanks[i].size()==attr.size(index))
 							memcpy(attr(index), p->chanks[i].data(), p->chanks[i].size());
 						else//smth wrong with server>server proxy
 							printf("npc update corrupt chank on index %d %d\n", (int)index, i);
@@ -256,7 +247,7 @@ namespace clasteredServerSlave{
 		return world::grid->getOwner(position.x, position.y);
 	}
 	
-	std::vector<int> npc::gridShares(){
+	std::vector<int>& npc::gridShares(){
 		return world::grid->getShares(position.x, position.y);		
 	}
 	

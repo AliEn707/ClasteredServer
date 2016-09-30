@@ -29,7 +29,7 @@ namespace clasteredServerSlave {
 	
 	typedef point_<short> points;
 	typedef point_<int> pointi;
-	typedef point_<float> poinf;
+	typedef point_<float> pointf;
 	
 }
 

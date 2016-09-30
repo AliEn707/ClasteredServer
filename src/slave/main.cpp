@@ -135,9 +135,9 @@ int main(int argc, char* argv[]){
 						//i am owner
 						n->m.lock();
 							if (n->updated()){
-								std::vector<int> shares=n->gridShares();
+								std::vector<int>& shares=n->gridShares();
 								n->pack(0,1);
-								for(unsigned i=0;i<shares.size();i++){
+								for(unsigned i=0, end=shares.size();i<end;i++){
 									n->p.dest.id=shares[i];
 									world::sock->send(&n->p);
 								}
