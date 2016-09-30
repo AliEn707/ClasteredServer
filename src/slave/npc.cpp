@@ -15,10 +15,8 @@ using namespace clasteredServer;
 
 namespace clasteredServerSlave{
 	
-	npc::npc(int _id, int slave, short t){
-		id=_id;
+	npc::npc(int id, int slave, short type): id(id),  type(type), cell_id(0){
 		slave_id=slave?:world::id;
-		type=t;
 		memset(&bot,0,sizeof(bot));
 		memset(keys,0,sizeof(keys));
 		memset(&direction,0,sizeof(direction));
@@ -36,7 +34,6 @@ namespace clasteredServerSlave{
 		
 		movef=npc::moves[type];
 		timestamp=time(0);
-		cell_id=0;
 		//TODO: add normal spawn position
 		///
 		position.x=10;

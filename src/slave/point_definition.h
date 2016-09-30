@@ -7,15 +7,11 @@
 namespace clasteredServerSlave {
 
 	template<class T>
-		point_<T>::point_(){
-			x=0;
-			y=0;
+		point_<T>::point_(): x(0), y(0){
 		}
 
 	template<class T>		
-		point_<T>::point_(T _x, T _y){
-			x=_x;
-			y=_y;
+		point_<T>::point_(T x, T y): x(x), y(y){
 		}
 
 	template<class T>		
