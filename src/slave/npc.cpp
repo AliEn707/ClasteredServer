@@ -15,17 +15,26 @@ using namespace clasteredServer;
 
 namespace clasteredServerSlave{
 	
-	npc::npc(int id, int slave, short type): id(id),  type(type), cell_id(0){
+	npc::npc(int id, int slave, short type): 
+		id(id), 
+		type(type), 
+		bot({0}), 
+		cell_id(0),
+		_updated({0}) 
+	{
 		slave_id=slave?:world::id;
-		memset(&bot,0,sizeof(bot));
+//		memset(&bot,0,sizeof(bot));
 		memset(keys,0,sizeof(keys));
-		memset(&direction,0,sizeof(direction));
-		memset(&_updated,0,sizeof(_updated));
+//		memset(&direction,0,sizeof(direction));
+//		memset(&_updated,0,sizeof(_updated));
 		
 		attr.push_back(position.x); //0
 		attr.push_back(position.y); //1
 		attr.push_back(direction.x);
 		attr.push_back(direction.y);
+		attr.push_back(type);
+		attr.push_back(owner_id);
+		attr.push_back(health);
 		
 		for(unsigned i=0;i<attr.size();i++){
 			attrs.push_back(0);
@@ -155,29 +164,26 @@ namespace clasteredServerSlave{
 				//special params
 				switch(index){
 					case -1:
-						owner_id=p->chanks[i].value.i;
-						break;
-					case -2:
 						keys[0]=p->chanks[i].value.c;
 						break;
-					case -3:
+					case -2:
 						keys[1]=p->chanks[i].value.c;
 						break;
-					case -4:
+					case -3:
 						keys[2]=p->chanks[i].value.c;
 						break;
-					case -5:
+					case -4:
 						keys[3]=p->chanks[i].value.c;
 						break;					
-					case -6:
+					case -5:
 						bot.used=p->chanks[i].value.c;
 //						printf("%d got bot used x %d\n", id, bot.used);
 						break;					
-					case -7:
+					case -6:
 						bot.goal.x=p->chanks[i].value.f;
 //						printf("%d got goal x %g\n",id, bot.goal.x);
 						break;					
-					case -8://TODO:find why it prints 2 times
+					case -7://TODO:find why it prints 2 times
 						bot.goal.y=p->chanks[i].value.f;
 //						printf("%d got goal y %g\n",id, bot.goal.y);
 						break;
@@ -216,24 +222,24 @@ namespace clasteredServerSlave{
 			
 			p.dest.type=server?SERVER_MESSAGE:CLIENT_MESSAGE;
 			if (all){
-				p.add((char)-1);
-				p.add(owner_id);
+				packAttr(p, type);
+				packAttr(p, owner_id);
 				_updated.pack.all=1;
 			} 
 			if (server){
 				if (all){
-					p.add((char)-6);
+					p.add((char)-5);
 					p.add((char)bot.used);
 				}
 				if (!bot.used){
 					for(int i=0;i<4;i++){
-						p.add((char)(-2-i));//-2 to -5
+						p.add((char)(-1-i));//-1 to -4
 						p.add((char)keys[i]);
 					}
 				}else{
-					p.add((char)-7);
+					p.add((char)-6);
 					p.add(bot.goal.x);
-					p.add((char)-8);
+					p.add((char)-7);
 					p.add(bot.goal.y);
 				}
 				_updated.pack.server=1;

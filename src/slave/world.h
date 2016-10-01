@@ -27,9 +27,11 @@ extern "C"{
 
 #define MSG_CLIENT_NPC_UPDATE 40
 #define MSG_CLIENT_UPDATE 41
+#define MSG_CLIENT_PLAYER_INFO 42
 
-#define MSG_SERVER_NPC_INFO 41 
-#define MSG_SERVER_NPC_UPDATE 40 
+#define MSG_SERVER_NPC_INFO 40 
+#define MSG_SERVER_NPC_UPDATE 41 
+#define MSG_SERVER_PLAYER_INFO 42
 
 namespace std{
 	ostream& operator<<(ostream &stream, const vector<int> &v);

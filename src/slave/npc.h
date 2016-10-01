@@ -18,8 +18,8 @@ namespace clasteredServerSlave {
 	typedef void (npc:: *move_func)(typeof(point::x) x, typeof(point::y) y);
 	
 	struct bot {
-		bool used;
-		point goal;
+		bool used; //a_as
+		point goal; //a_s
 		int dist; //moved distance
 	};
 	
@@ -27,16 +27,20 @@ namespace clasteredServerSlave {
 		public:
 			short state;
 			int id;
-			short type;
-			int r; //radius of collision
-			bool alive;
-			point position; //0,1
-			short health;
+			//action attributes
+			point position; //a_
+			pointf direction; //a_
+			short health; //a_
+			short type; //a_a
+			int owner_id;//a_a
+			char keys[4]; //a_s //x,y(l- r+ t- b+), angle		l,t,r,b
+			clasteredServerSlave::bot bot;
+			//common attributes
 			clasteredServer::packet p;
 			clasteredServer::mutex m;
-			int owner_id;
 			int slave_id;
 			int cell_id;
+			int r; //radius of collision
 			std::vector<int> cells;
 			struct{
 				struct{
@@ -45,10 +49,8 @@ namespace clasteredServerSlave {
 					bool server;
 				} pack;
 			} _updated;
-			char keys[4]; //x,y(l- r+ t- b+), angle		l,t,r,b
-			clasteredServerSlave::bot bot;
 			attrs_map attr;
-			std::vector<bool> attrs; //attributes flags
+			std::vector<bool> attrs; //attributes updated flags
 			move_func movef;
 
 			npc(int id, int slave=0, short type=0);
@@ -59,7 +61,7 @@ namespace clasteredServerSlave {
 			void set_dir(float x, float y);
 			void update(clasteredServer::packet * p);
 			bool updated(); 			
-			void pack(bool all=0, bool server=0); 
+			void pack(bool all=0, bool server=0); //pack action attributes, do not pack special atributes
 			int gridOwner();
 			std::vector<int>& gridShares();
 
@@ -72,7 +74,6 @@ namespace clasteredServerSlave {
 		protected:
 			float vel;
 			time_t timestamp;
-			pointf direction; //2,3
 			
 			bool check_point(typeof(point::x) x, typeof(point::y) y);
 			bool update_cells();

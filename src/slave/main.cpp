@@ -113,8 +113,9 @@ int main(int argc, char* argv[]){
 		//send data to players
 		world::m.lock();
 			for(std::map<int, player*>::iterator it = world::players.begin(), end = world::players.end();it != end; ++it){
-				if (it->second){
-					it->second->sendUpdates();
+				player *p=it->second;
+				if (p && withLock(p->m, p->connected)){
+					p->sendUpdates();
 				}
 			}		
 		world::m.unlock();
@@ -154,7 +155,7 @@ int main(int argc, char* argv[]){
 								world::sock->send(&n->p);
 							n->m.unlock();
 						}
-						if (p){
+						if (p && withLock(p->m, p->connected)){
 							p->move();
 						}
 					}

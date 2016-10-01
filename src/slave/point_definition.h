@@ -23,6 +23,18 @@ namespace clasteredServerSlave {
 			}
 		}
 
+	template<class T>		
+		char point_<T>::to_angle(){
+			return 120/3.14f*atan2f(x,y);  //pseudo radians [-120, 120]
+		}
+
+	template<class T>		
+		void point_<T>::by_angle(char angle, T l){
+			float rad=angle*3.14f/120;
+			x=l*cosf(rad);
+			y=l*sinf(rad);
+		}
+
 	template<class T>
 	template<class T1>		
 		float point_<T>::distanse(point_<T1> &b){
@@ -33,6 +45,13 @@ namespace clasteredServerSlave {
 	template<class T1>
 		T point_<T>::distanse2(point_<T1> &b){
 			return sqr(b.x-x)+sqr(b.y-y);
+		}
+
+	template<class T>		
+		point_<T> point_<T>::from_angle(char angle, T l){
+			point_<T> p;
+			p.by_angle(angle,l);
+			return p;
 		}
 
 	template<class T>

@@ -10,11 +10,14 @@ namespace clasteredServerSlave {
 				point_();
 				point_(T _x, T _y);
 				void normalize();
+				char to_angle();
+				void by_angle(char angle, T l=1);
 				template<class T1>
 					float distanse(point_<T1> &b);
 				template<class T1>
 					T distanse2(point_<T1> &b);
-
+			
+				static point_ from_angle(char angle, T l=1);//l is length of vector
 				template<class T1, class T2>
 					static T scalar(point_<T1> &&a, point_<T2> &&b);
 				template<class T1, class T2>

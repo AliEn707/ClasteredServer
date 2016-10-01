@@ -10,7 +10,7 @@ using namespace clasteredServer;
 
 namespace clasteredServerSlave{
 
-	player::player(int id): id(id), npc(0){
+	player::player(int id): id(id), connected(0), npc(0){
 		//add position get, check and redirest to write server
 		for(std::map<int, clasteredServerSlave::npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
 			clasteredServerSlave::npc* n=it->second;
@@ -68,5 +68,9 @@ namespace clasteredServerSlave{
 			p.add(oid);
 			world::sock->send(&p);
 		}
+	}
+	
+	void player::update(packet *p){
+		//TODO: fill
 	}
 }
