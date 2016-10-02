@@ -51,7 +51,7 @@ namespace clasteredServerSlave{
 				bot.dist+=vel;
 				attrs[attr(&position.x)]=1;
 			} else {
-				//TODO: suicide
+				hurt(100);//suicide
 			}
 		}
 		

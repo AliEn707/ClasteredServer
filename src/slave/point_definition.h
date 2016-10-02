@@ -25,12 +25,12 @@ namespace clasteredServerSlave {
 
 	template<class T>		
 		char point_<T>::to_angle(){
-			return 120/3.14f*atan2f(x,y);  //pseudo radians [-120, 120]
+			return to_pdegrees(atan2f(x,y));  //pseudo radians [-120, 120]
 		}
 
 	template<class T>		
 		void point_<T>::by_angle(char angle, T l){
-			float rad=angle*3.14f/120;
+			float rad=from_pdegrees(angle);
 			x=l*cosf(rad);
 			y=l*sinf(rad);
 		}

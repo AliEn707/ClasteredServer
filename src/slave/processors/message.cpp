@@ -70,7 +70,9 @@ namespace clasteredServerSlave {
 	//got new id
 	//[id]
 	static void* message9(packet* p){
-		world::ids.push(p->chanks[0].value.i);
+		world::m.lock();
+			world::ids.push(p->chanks[0].value.i);
+		world::m.unlock();
 		printf("got new id %d\n", p->chanks[0].value.i);
 		return 0;
 	}

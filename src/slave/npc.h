@@ -18,23 +18,24 @@ namespace clasteredServerSlave {
 	typedef void (npc:: *move_func)(typeof(point::x) x, typeof(point::y) y);
 	
 	struct bot {
-		bool used; //a_as
-		point goal; //a_s
+		bool used;
+		point goal;
 		int dist; //moved distance
 	};
 	
 	class npc {
 		public:
-			short state;
 			int id;
 			//action attributes
-			point position; //a_
-			pointf direction; //a_
-			short health; //a_
-			short type; //a_a
-			int owner_id;//a_a
-			char keys[4]; //a_s //x,y(l- r+ t- b+), angle		l,t,r,b
+			char state; //TODO: use it
+			point position;
+			pointf direction;
+			short health;
+			short type;
+			int owner_id;
+			char keys[4]; //x,y(l- r+ t- b+), angle	
 			clasteredServerSlave::bot bot;
+		
 			//common attributes
 			clasteredServer::packet p;
 			clasteredServer::mutex m;
@@ -45,7 +46,7 @@ namespace clasteredServerSlave {
 			struct{
 				struct{
 					bool done;
-					bool all;
+					bool all; //static parameters
 					bool server;
 				} pack;
 			} _updated;
@@ -59,6 +60,7 @@ namespace clasteredServerSlave {
 			void move();
 			void set_dir();
 			void set_dir(float x, float y);
+			bool hurt(short d);
 			void update(clasteredServer::packet * p);
 			bool updated(); 			
 			void pack(bool all=0, bool server=0); //pack action attributes, do not pack special atributes

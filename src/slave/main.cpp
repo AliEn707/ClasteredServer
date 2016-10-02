@@ -83,18 +83,6 @@ int main(int argc, char* argv[]){
 	}
 	while(withLock(world::m, world::main_loop)){
 		syncer.timePassed();
-		//clear flags
-		world::m.lock();
-			for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
-				npc* n=it->second;
-				if (n){
-					if (withLock(n->m, n->clear())){
-						world::npcs[n->id]=0;
-						delete n;
-					}
-				}
-			}
-		world::m.unlock();
 		//now move
 		world::m.lock();
 			for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
@@ -109,18 +97,18 @@ int main(int argc, char* argv[]){
 					n->m.unlock();
 				}
 			}
-		world::m.unlock();
+//		world::m.unlock();
 		//send data to players
-		world::m.lock();
+//		world::m.lock();
 			for(std::map<int, player*>::iterator it = world::players.begin(), end = world::players.end();it != end; ++it){
 				player *p=it->second;
 				if (p && withLock(p->m, p->connected)){
 					p->sendUpdates();
 				}
 			}		
-		world::m.unlock();
+//		world::m.unlock();
 		//check areas
-		world::m.lock();
+//		world::m.lock();
 			for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
 				npc *n=it->second;
 				if (n){
@@ -161,6 +149,19 @@ int main(int argc, char* argv[]){
 					}
 				}
 			}	
+//		world::m.unlock();
+		//clear flags
+//		world::m.lock();
+			for(std::map<int, npc*>::iterator it = world::npcs.begin(), end = world::npcs.end();it != end; ++it){
+				npc* n=it->second;
+				if (n){
+					if (withLock(n->m, n->clear())){
+						world::npcs[n->id]=0;
+						world::ids.push(n->id);//return id
+						delete n;
+					}
+				}
+			}
 		world::m.unlock();
 		syncer.syncTPS(TPS);
 	}

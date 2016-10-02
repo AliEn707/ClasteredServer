@@ -17,6 +17,8 @@ namespace clasteredServerSlave{
 	
 	npc::npc(int id, int slave, short type): 
 		id(id), 
+		state(0), 
+		health(1),
 		type(type), 
 		bot({0}), 
 		cell_id(0),
@@ -30,14 +32,15 @@ namespace clasteredServerSlave{
 		
 		attr.push_back(position.x); //0
 		attr.push_back(position.y); //1
-		attr.push_back(direction.x);
-		attr.push_back(direction.y);
-		attr.push_back(type);
-		attr.push_back(owner_id);
-		attr.push_back(health);
+		attr.push_back(direction.x); //2
+		attr.push_back(direction.y); //3
+		attr.push_back(state); //4
+		attr.push_back(type); //5s
+		attr.push_back(owner_id); //6s
+		attr.push_back(health); //7
 		
 		for(unsigned i=0;i<attr.size();i++){
-			attrs.push_back(0);
+			attrs.push_back(1);
 		}
 		
 		movef=npc::moves[type];
@@ -58,16 +61,17 @@ namespace clasteredServerSlave{
 	}
 		
 	bool npc::clear(){
-		if (time(0)-timestamp>15 && (gridOwner()!=world::id || (!bot.used && !world::players[owner_id]))){
+		if (health<=0 || (time(0)-timestamp>15 && (gridOwner()!=world::id || (!bot.used && !world::players[owner_id])))){
 			return 1;
 		}
-			
+		
 		for(unsigned i=0;i<attrs.size();i++){
 			attrs[i]=0;
 		}
-		_updated.pack.done=0;
-		_updated.pack.all=0;
-		_updated.pack.server=0;
+//		_updated.pack.done=0;
+//		_updated.pack.all=0;
+//		_updated.pack.server=0;
+		memset(&_updated,0,sizeof(_updated));
 		return 0;
 	}
 	
@@ -141,6 +145,12 @@ namespace clasteredServerSlave{
 		direction.normalize();
 	}
 	
+	bool npc::hurt(short d){
+		health-=d;//TODO: add armor, resist and other
+		attrs[attr(&health)]=1;
+		return health<=0;
+	}
+	
 	void npc::update(packet * p){
 		for(unsigned i=1;i<p->chanks.size();i++){
 			int index=(int)p->chanks[i++].value.c;
@@ -202,12 +212,16 @@ namespace clasteredServerSlave{
 		return 0;
 	}
 	
-#define packAttr(p,a)\
-	if (attrs[attr(&(a))]){\
-		p.add((char)attr(&(a)));\
-		p.add(a);\
-	}
+#define packAttr(p, a, b)\
+	do{\
+		int $=attr(&(a));\
+		if (b || attrs[$]){\
+			p.add((char)$);\
+			p.add(a);\
+		}\
+	}while(0)
 	
+	//need to choose: <0 - static attrs or slave attrs
 	void npc::pack(bool all, bool server){
 		if (!_updated.pack.done || 
 				_updated.pack.server!=server || 
@@ -215,15 +229,16 @@ namespace clasteredServerSlave{
 			p.init();
 			p.setType(server?MSG_SERVER_NPC_UPDATE:MSG_CLIENT_NPC_UPDATE);//npc update
 			p.add(id);
-			packAttr(p, position.x);
-			packAttr(p, position.y);
-			packAttr(p, direction.x);
-			packAttr(p, direction.y);
+			packAttr(p, position.x, 0);
+			packAttr(p, position.y, 0);
+			packAttr(p, direction.x, 0);
+			packAttr(p, direction.y, 0);
+			packAttr(p, state, 0);
 			
 			p.dest.type=server?SERVER_MESSAGE:CLIENT_MESSAGE;
-			if (all){
-				packAttr(p, type);
-				packAttr(p, owner_id);
+			if (all){//static
+				packAttr(p, type, 1);
+				packAttr(p, owner_id, 1);
 				_updated.pack.all=1;
 			} 
 			if (server){

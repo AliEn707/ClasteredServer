@@ -33,7 +33,7 @@ class PlayState extends FlxState
 	private var hudCam:FlxCamera;
 	private var overlayCamera:FlxCamera;
 	private var deadzoneOverlay:FlxSprite;
-	private var keys:Array<Bool> = new Array<Bool>();
+	private var keys:Array<Int> = [0,0,0,0];
 
 	override public function create():Void 
 	{	
@@ -240,82 +240,53 @@ class PlayState extends FlxState
 	private function checkInput(elapsed:Float) {
 		var speed = 200;
 		var game:CSGame = cast FlxG.game;
-		var keys_changed:Bool = false;
-		if (FlxG.keys.anyPressed([A, LEFT])){
-//			orb.updater[0](orb.x - speed * elapsed);
-			if (!keys[0]){
-				keys[0] = true;
-				keys_changed = true;
-			}
-//			orb.x+=-speed*elapsed;
-		}else{
-			if (keys[0]){
-				keys[0] = false;
-				keys_changed = true;
-			}
+		var p:Packet = new Packet();
+		var keys_changed:Array<Bool> = [false, false];
+
+		if (FlxG.keys.anyJustPressed([A, LEFT])){
+			keys[0] -= 100;
+			keys_changed[0] = true;
+		}
+		if (FlxG.keys.anyJustReleased([A, LEFT])){
+			keys[0] += 100;
+			keys_changed[0] = true;
+		}
+		if (FlxG.keys.anyJustPressed([D, RIGHT])){
+			keys[0] += 100;
+			keys_changed[0] = true;
+		}
+		if (FlxG.keys.anyJustReleased([D, RIGHT])){
+			keys[0] -= 100;
+			keys_changed[0] = true;
+		}
+		if (keys_changed[0]){
+			p.addChar(0);
+			p.addChar(keys[0]);
 		}
 		
-		if (FlxG.keys.anyPressed([S, DOWN])){
-//			orb.updater[1](orb.y + speed * elapsed);
-			if (!keys[3]){
-				keys[3] = true;
-				keys_changed = true;
-			}
-//			orb.y+=speed*elapsed;
-		}else{
-			if (keys[3]){
-				keys[3] = false;
-				keys_changed = true;
-			}
+		if (FlxG.keys.anyJustPressed([S, DOWN])){
+			keys[1] += 100;
+			keys_changed[1] = true;
 		}
-		
-		if (FlxG.keys.anyPressed([D, RIGHT])){
-//			orb.updater[0](orb.x + speed * elapsed);
-			if (!keys[2]){
-				keys[2] = true;
-				keys_changed = true;
-			}
-//			orb.x+=speed*elapsed;
-		}else{
-			if (keys[2]){
-				keys[2] = false;
-				keys_changed = true;
-			}
+		if (FlxG.keys.anyJustReleased([S, DOWN])){
+			keys[1] -= 100;
+			keys_changed[1] = true;
 		}
-		
-		
 		if (FlxG.keys.anyJustPressed([W, UP])){
-//			orb.updater[1](orb.y - speed * elapsed);
-			if (!keys[1]){
-				keys[1] = true;
-				keys_changed = true;
-			}
-//			orb.y+=-speed*elapsed;
+			keys[1] -= 100;
+			keys_changed[1] = true;
 		}
 		if (FlxG.keys.anyJustReleased([W, UP])){
-			if (keys[1]){
-				keys[1] = false;
-				keys_changed = true;
-			}
+			keys[1] += 100;
+			keys_changed[1] = true;
+		}
+		if (keys_changed[1]){
+			p.addChar(1);
+			p.addChar(keys[1]);
 		}
 		
-		if (keys_changed){
-			var p:Packet = new Packet();
+		if (p.chanks.length>0){
 			p.type = 41;
-			p.addChar(0);
-			var val = 0;
-			if (keys[0]) 
-				val += -1;
-			if (keys[2])
-				val += 1;
-			p.addChar(val);
-			p.addChar(1);
-			val = 0;
-			if (keys[1]) 
-				val += -1;
-			if (keys[3])
-				val += 1;
-			p.addChar(val);
 			game.connection.sendPacket(p);
 //			trace("sended");
 		}
